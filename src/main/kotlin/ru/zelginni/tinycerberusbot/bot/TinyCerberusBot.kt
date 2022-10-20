@@ -62,20 +62,18 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
-        if (update.hasMessage()
-                || update.message.hasText()
-                || update.message.text.lowercase().contains("баян")
-                && update.message.from.isBot
-        ) {
-            respondToBayan(update)
-            return
-        }
         if (!update.hasMessage()
             || !update.message.hasText()
             || !update.message.isCommand
             || !update.message.text.contains(botUsername)
             || !isAdmin(update.message.from, update.message.chat)
         ) {
+            return
+        }
+        if (update.message.text.lowercase().contains("баян")
+                && !update.message.from.isBot
+        ) {
+            respondToBayan(update)
             return
         }
 
