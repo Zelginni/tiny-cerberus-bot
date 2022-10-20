@@ -26,5 +26,4 @@ create table if not exists cerberus.warn (
         author_username varchar(300),
         PRIMARY KEY(id),
         FOREIGN KEY(user_id) REFERENCES chat_user(id)
-
 )
