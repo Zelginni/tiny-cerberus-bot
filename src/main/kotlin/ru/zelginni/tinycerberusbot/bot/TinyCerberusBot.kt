@@ -1,5 +1,6 @@
 package ru.zelginni.tinycerberusbot.bot
 
+import org.apache.commons.collections4.map.PassiveExpiringMap
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -7,12 +8,19 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod
 import org.telegram.telegrambots.meta.api.methods.groupadministration.BanChatMember
+import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
+import org.telegram.telegrambots.meta.api.objects.Chat
 import org.telegram.telegrambots.meta.api.objects.Update
+import org.telegram.telegrambots.meta.api.objects.User
+import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import java.io.Serializable
+import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
+import kotlin.collections.HashMap
 
 @Component
 class TinyCerberusBot(
@@ -26,6 +34,15 @@ class TinyCerberusBot(
 
     @Value("\${bot.token}")
     private val botToken: String = ""
+
+    @Value("\${bot.adminlistcache:600}")
+    private val adminListCacheSeconds: Long = 600
+
+    private val recentlyRequestedAdmins =
+        Collections.synchronizedMap(PassiveExpiringMap(
+            PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy(
+                adminListCacheSeconds, TimeUnit.SECONDS),
+            HashMap<Long, List<ChatMember>>()))
 
     @PostConstruct
     private fun init() {
@@ -46,6 +63,7 @@ class TinyCerberusBot(
             || !update.message.hasText()
             || !update.message.isCommand
             || !update.message.text.contains(botUsername)
+            || !isAdmin(update.message.from, update.message.chat)
         ) {
             return
         }
@@ -88,11 +106,26 @@ class TinyCerberusBot(
         perform(ban)
     }
 
-    private fun <T: Serializable> perform(action: BotApiMethod<T>) {
-        try {
+    private fun isAdmin(user: User, chat: Chat): Boolean {
+        return getAdminList(chat).any { it.user.id == user.id }
+    }
+
+    private fun getAdminList(chat: Chat): List<ChatMember> {
+        return recentlyRequestedAdmins.computeIfAbsent(chat.id) {
+            requestAdminList(it)
+        }
+    }
+
+    private fun requestAdminList(chatId: Long): List<ChatMember> {
+        return perform(GetChatAdministrators(chatId.toString())) ?: listOf()
+    }
+
+    private fun <T: Serializable> perform(action: BotApiMethod<T>): T? {
+        return try {
             execute(action)
         } catch (e: TelegramApiException) {
             logger.error("Problem to perform $action", e)
+            null
         }
     }
 }

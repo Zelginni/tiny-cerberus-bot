@@ -15,10 +15,14 @@ class CommandService(
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
             ?: return CommandResult(
                 CommandStatus.Error,
-                "Аид запретил мне кусаться в этом чате.",
-                ResultAction.Print
+                "Аид запретил мне кусаться в этом чате."
             )
-        val warnedUser = update.message.replyToMessage.from
+        val repliedMessage = update.message.replyToMessage
+            ?: return CommandResult(
+                CommandStatus.Error,
+                "Не вижу реплай. Если он есть, попробуйте сообщение посвежее"
+            )
+        val warnedUser = repliedMessage.from
         val user = userService.createOrGetUser(warnedUser.id.toString(), warnedUser.userName, chat)
 
         val warnAuthor = update.message.from
@@ -34,8 +38,7 @@ class CommandService(
             val limitText = if (warnLimit > 0) "равен $warnLimit" else "не установлен"
             CommandResult(
                 CommandStatus.Success,
-                "@${warnedUser.userName} получает варн №$warnCount. Лимит варнов в чате $limitText.",
-                ResultAction.Print
+                "@${warnedUser.userName} получает варн №$warnCount. Лимит варнов в чате $limitText."
             )
         }
     }
@@ -44,8 +47,7 @@ class CommandService(
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
         return CommandResult(
             CommandStatus.Success,
-            if (chat == null) "Аид запретил мне кусаться в этом чате." else "Здесь я могу кусаться.",
-            ResultAction.Print
+            if (chat == null) "Аид запретил мне кусаться в этом чате." else "Здесь я могу кусаться."
         )
     }
 

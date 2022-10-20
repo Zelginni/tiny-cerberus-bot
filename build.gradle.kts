@@ -28,6 +28,7 @@ dependencies {
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.12")
 
 	implementation("org.telegram:telegrambots:6.1.0")
+	implementation("org.apache.commons:commons-collections4:4.4")
 
 	implementation("org.flywaydb:flyway-core")
 	runtimeOnly("com.h2database:h2")
