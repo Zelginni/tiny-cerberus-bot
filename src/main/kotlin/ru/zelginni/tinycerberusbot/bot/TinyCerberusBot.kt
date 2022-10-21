@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.methods.BotApiMethod
 import org.telegram.telegrambots.meta.api.methods.groupadministration.BanChatMember
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.objects.Chat
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
@@ -44,6 +45,11 @@ class TinyCerberusBot(
                 adminListCacheSeconds, TimeUnit.SECONDS),
             HashMap<Long, List<ChatMember>>()))
 
+    @Value("\${bot.maxstickersinarow:1}")
+    private val maxStickersInARow: Int = 1
+
+    private var stickersInARow: Int = 0
+
     @PostConstruct
     private fun init() {
         val botsApi = TelegramBotsApi(DefaultBotSession::class.java)
@@ -66,6 +72,13 @@ class TinyCerberusBot(
             || !isAdmin(update.message.from, update.message.chat)
         ) {
             return
+        }
+        if (update.message.sticker != null) {
+            stickersInARow++
+            if (stickersInARow > maxStickersInARow) {
+                deleteMessage(update)
+                stickersInARow = 0
+            }
         }
         val command = getCommand(update.message.text)
         if (command == null) {
@@ -104,6 +117,14 @@ class TinyCerberusBot(
             userId = update.message.replyToMessage.from.id
         }
         perform(ban)
+    }
+
+    private fun deleteMessage(update: Update) {
+        val deleteMessage = DeleteMessage().apply {
+            setChatId(update.message.chatId)
+            messageId
+        }
+        perform(deleteMessage)
     }
 
     private fun isAdmin(user: User, chat: Chat): Boolean {
