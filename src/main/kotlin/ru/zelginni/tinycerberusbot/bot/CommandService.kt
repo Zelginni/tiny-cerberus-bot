@@ -29,7 +29,7 @@ class CommandService(
             Collections.synchronizedMap(PassiveExpiringMap(
                     PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy(
                             amnestyOpportunity, TimeUnit.SECONDS),
-                    HashMap<Long, User>()))
+                    HashMap<Long, List<User>>()))
 
     fun warn(update: Update): CommandResult {
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
@@ -73,23 +73,25 @@ class CommandService(
 
     fun amnesty(update: Update): CommandResult {
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+                ?: return CommandResult(
+                        CommandStatus.Error,
+                        "Аид запретил мне кусаться в этом чате."
+                )
         val voterForAmnesty = update.message.from
-        if (amnesty.size >= needVotesForAmnesty) {
-            if (chat != null) {
-                chat.id?.let { warnRepository.removeAllByChatId(it) }
-            }
-            return CommandResult(
+        val votersForAmnestyCount = amnesty[update.message.chatId]?.size
+        return if (votersForAmnestyCount != null
+                && votersForAmnestyCount >= needVotesForAmnesty) {
+            chat.id?.let { warnRepository.removeAllByChatId(it) }
+            CommandResult(
                     CommandStatus.Success,
                     "Объявлена амнистия! Количество варнов уменьшено до нуля!"
             )
         } else {
-            if (chat != null) {
-                amnesty[chat.id] = voterForAmnesty
-            }
-            return CommandResult(
+            amnesty[update.message.chatId] = listOf(update.message.from)
+            CommandResult(
                     CommandStatus.Success,
                     "@${voterForAmnesty.userName} голосует за амнистию! До окончания голосования осталось $amnestyOpportunity секунд! " +
-                            "Голосов за амнистию должно быть: $needVotesForAmnesty. Сейчас голосов: ${amnesty.size}."
+                            "Голосов за амнистию должно быть: $needVotesForAmnesty. Сейчас голосов: $voterForAmnesty."
             )
         }
     }
