@@ -8,4 +8,4 @@ data class CommandResult(
 
 enum class CommandStatus { Success, Error }
 
-enum class ResultAction { Print, Ban }
+enum class ResultAction { Print, Ban, Delete, Nothing }

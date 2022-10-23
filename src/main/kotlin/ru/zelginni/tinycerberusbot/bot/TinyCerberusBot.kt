@@ -25,7 +25,8 @@ import kotlin.collections.HashMap
 
 @Component
 class TinyCerberusBot(
-    private val commandService: CommandService
+    private val commandService: CommandService,
+    private val stickerService: StickerService
 ): TelegramLongPollingBot() {
 
     private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
@@ -45,11 +46,6 @@ class TinyCerberusBot(
                 adminListCacheSeconds, TimeUnit.SECONDS),
             HashMap<Long, List<ChatMember>>()))
 
-    @Value("\${bot.maxstickersinarow:1}")
-    private val maxStickersInARow: Int = 1
-
-    private var stickersInARow: Int = 0
-
     @PostConstruct
     private fun init() {
         val botsApi = TelegramBotsApi(DefaultBotSession::class.java)
@@ -65,6 +61,13 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
+        if (update.hasMessage() && update.message.sticker != null) {
+            val purgeResult = stickerService.purgeSticker(update)
+            if (purgeResult.resultAction == ResultAction.Delete) {
+                deleteMessage(update)
+            }
+            return
+        }
         if (!update.hasMessage()
             || !update.message.hasText()
             || !update.message.isCommand
@@ -72,13 +75,6 @@ class TinyCerberusBot(
             || !isAdmin(update.message.from, update.message.chat)
         ) {
             return
-        }
-        if (update.message.sticker != null) {
-            stickersInARow++
-            if (stickersInARow > maxStickersInARow) {
-                deleteMessage(update)
-                stickersInARow = 0
-            }
         }
         val command = getCommand(update.message.text)
         if (command == null) {
@@ -98,6 +94,7 @@ class TinyCerberusBot(
         when(commandResult.resultAction) {
             ResultAction.Ban -> banMember(update)
             ResultAction.Print -> {}
+            else -> {}
         }
     }
 
