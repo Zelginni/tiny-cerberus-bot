@@ -19,7 +19,7 @@ class StickerService(
     private val stickersInARow = HashMap<Long, List<User>>()
 
     fun purgeSticker(update: Update): CommandResult {
-        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+        chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
                 ?: return CommandResult(
                         CommandStatus.Error,
                         "Аид запретил мне кусаться в этом чате."
