@@ -3,6 +3,7 @@ package ru.zelginni.tinycerberusbot.bot
 import org.apache.commons.collections4.map.PassiveExpiringMap
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.TelegramBotsApi
@@ -16,7 +17,12 @@ import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
+import ru.zelginni.tinycerberusbot.chat.ChatService
+import ru.zelginni.tinycerberusbot.chat.ChatViewDto
+import ru.zelginni.tinycerberusbot.holiday.HolidayService
 import java.io.Serializable
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
@@ -24,7 +30,9 @@ import kotlin.collections.HashMap
 
 @Component
 class TinyCerberusBot(
-    private val commandService: CommandService
+    private val commandService: CommandService,
+    private val chatService: ChatService,
+    private val holidayService: HolidayService
 ): TelegramLongPollingBot() {
 
     private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
@@ -86,6 +94,23 @@ class TinyCerberusBot(
             ResultAction.Ban -> banMember(update)
             ResultAction.Print -> {}
         }
+    }
+
+    @Scheduled(cron = "0 0 10 * * *")
+    fun dailyHoliday() {
+        val format = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val allChats: List<ChatViewDto> = chatService.getAllChats()
+        val holiday = holidayService.getHoliday()
+        for (chat in allChats) {
+            val message = SendMessage().apply {
+                chat.telegramId?.let { setChatId(it) }
+                text = "Сегодня " + LocalDateTime.now().format(format) + "\n" +
+                        "Отмечаем " + holiday.name + "\n" +
+                        "Нет повода не выпить!"
+            }
+            perform(message)
+        }
+
     }
 
     private fun sendSimpleText(update: Update, messageText: String) {
