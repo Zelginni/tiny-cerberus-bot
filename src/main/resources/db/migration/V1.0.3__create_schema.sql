@@ -7,7 +7,7 @@ create table if not exists cerberus.holiday
     PRIMARY KEY (id)
 );
 
-merge into cerberus.holiday (name, day, month) VALUES
+merge into cerberus.holiday (name, month, day) VALUES
                                                    ('День, когда стоит подумать о времени и о себе', 1, 1),
                                                    ('День высоких идеалов', 1, 2),
                                                    ('День фольклора', 1, 3),
