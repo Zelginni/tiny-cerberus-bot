@@ -103,7 +103,7 @@ class TinyCerberusBot(
         val holiday = holidayService.getHoliday()
         for (chat in allChats) {
             val message = SendMessage().apply {
-                chat.telegramId?.let { setChatId(it) }
+                chat.telegramId?.let { chatId = it }
                 text = "Сегодня " + LocalDateTime.now().format(format) + "\n" +
                         "Отмечаем " + holiday.name + "\n" +
                         "Нет повода не выпить!"
