@@ -5,7 +5,7 @@ create table if not exists cerberus.bayan
     PRIMARY KEY (id)
 );
 
-merge into cerberus.bayan (id, response) VALUES
+insert into cerberus.bayan (id, response) VALUES
                                              (1, 'В анусе у тебя баян!'),
                                              (2, 'В штанах у тебя баян!'),
                                              (3, 'Очко твое баян!');
