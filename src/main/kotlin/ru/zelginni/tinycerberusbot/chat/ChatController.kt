@@ -61,6 +61,42 @@ class ChatController(
         return ResponseEntity.ok("Chat $telegramId enabled")
     }
 
+    @PutMapping("/enable/bayan")
+    @Operation(
+        summary = "Enable bayan",
+        description = "Enable bayan feature for chat",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun enableBayan(@RequestParam telegramId: String): ResponseEntity<String> {
+        logger.info("Enable bayan in chat $telegramId")
+        chatService.enableBayanInChat(telegramId)
+        return ResponseEntity.ok("Bayan in chat $telegramId enabled")
+    }
+
+    @PutMapping("/disable/bayan")
+    @Operation(
+        summary = "Disable bayan",
+        description = "Disable bayan feature for chat",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun disableBayan(@RequestParam telegramId: String): ResponseEntity<String> {
+        logger.info("Disable bayan in chat $telegramId")
+        chatService.disableBayanInChat(telegramId)
+        return ResponseEntity.ok("Bayan in chat $telegramId enabled")
+    }
+
+    @GetMapping("/cache/clean")
+    @Operation(
+        summary = "Enable chat",
+        description = "Enable chat for bot",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun cleanCache(): ResponseEntity<String> {
+        logger.info("Clean cache")
+        chatService.cleanCache()
+        return ResponseEntity.ok("Chat cache cleaned")
+    }
+
     @ExceptionHandler
     fun handleError(e: Exception): Map<String, String?> {
         logger.error("Something went wrong in admin chat controller", e)

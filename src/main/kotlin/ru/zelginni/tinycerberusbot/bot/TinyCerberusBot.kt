@@ -16,6 +16,8 @@ import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
+import ru.zelginni.tinycerberusbot.bayan.Bayan
+import ru.zelginni.tinycerberusbot.bayan.BayanService
 import java.io.Serializable
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -24,7 +26,8 @@ import kotlin.collections.HashMap
 
 @Component
 class TinyCerberusBot(
-    private val commandService: CommandService
+    private val commandService: CommandService,
+    private val bayanService: BayanService
 ): TelegramLongPollingBot() {
 
     private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
@@ -59,6 +62,27 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
+        processBayan(update)
+        processCommand(update)
+    }
+
+    private fun processBayan(update: Update) {
+        if (update.message.text.lowercase().contains("баян")
+            && !update.message.from.isBot
+        ) {
+            respondToBayan(update)
+            return
+        }
+    }
+
+    private fun respondToBayan(update: Update) {
+        val bayan: Bayan? = bayanService.respondToBayan(update)
+        if (bayan != null) {
+            bayan.response?.let { sendSimpleText(update, it) }
+        }
+    }
+
+    private fun processCommand(update: Update) {
         if (!update.hasMessage()
             || !update.message.hasText()
             || !update.message.isCommand
@@ -72,7 +96,7 @@ class TinyCerberusBot(
             sendSimpleText(update, "Я не понимаю :(")
             return
         }
-        val commandResult =  try {
+        val commandResult = try {
             command.performCommand(commandService, update)
         } catch (e: Exception) {
             logger.error("Command not performed: $command", e)
