@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod
 import org.telegram.telegrambots.meta.api.methods.groupadministration.BanChatMember
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators
+import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Chat
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -75,6 +76,12 @@ class TinyCerberusBot(
         ) {
             return
         }
+        if (update.hasMessage()
+                && update.message.hasText()
+                && update.message.text.contains("Дайджест")
+                && isBot(update.message.from)) {
+            PinChatMessage(update.message.chatId.toString(), update.message.messageId, true)
+        }
         val command = getCommand(update.message.text)
         if (command == null) {
             sendSimpleText(update, "Я не понимаю :(")
@@ -119,7 +126,6 @@ class TinyCerberusBot(
                     chat.telegramId
                     text = "Дайджест за сутки:" + "\n" +
                             digestList
-
                 }
                 perform(message)
             }
@@ -142,6 +148,10 @@ class TinyCerberusBot(
             userId = update.message.replyToMessage.from.id
         }
         perform(ban)
+    }
+
+    private fun isBot(user: User): Boolean {
+        return user.isBot
     }
 
     private fun isAdmin(user: User, chat: Chat): Boolean {
