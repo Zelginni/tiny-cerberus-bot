@@ -62,6 +62,27 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
+        processBayan(update)
+        processCommand(update)
+    }
+
+    private fun processBayan(update: Update) {
+        if (update.message.text.lowercase().contains("баян")
+            && !update.message.from.isBot
+        ) {
+            respondToBayan(update)
+            return
+        }
+    }
+
+    private fun respondToBayan(update: Update) {
+        val bayan: Bayan? = bayanService.respondToBayan(update)
+        if (bayan != null) {
+            bayan.response?.let { sendSimpleText(update, it) }
+        }
+    }
+
+    private fun processCommand(update: Update) {
         if (!update.hasMessage()
             || !update.message.hasText()
             || !update.message.isCommand
@@ -70,13 +91,6 @@ class TinyCerberusBot(
         ) {
             return
         }
-        if (update.message.text.lowercase().contains("баян")
-                && !update.message.from.isBot
-        ) {
-            respondToBayan(update)
-            return
-        }
-
         val command = getCommand(update.message.text)
         if (command == null) {
             sendSimpleText(update, "Я не понимаю :(")
@@ -114,13 +128,6 @@ class TinyCerberusBot(
             userId = update.message.replyToMessage.from.id
         }
         perform(ban)
-    }
-
-    private fun respondToBayan(update: Update) {
-        val bayan: Bayan? = bayanService.respondToBayan()
-        if (bayan != null) {
-            bayan.response?.let { sendSimpleText(update, it) }
-        }
     }
 
     private fun isAdmin(user: User, chat: Chat): Boolean {
