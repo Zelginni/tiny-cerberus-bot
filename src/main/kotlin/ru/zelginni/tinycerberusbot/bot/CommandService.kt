@@ -3,12 +3,14 @@ package ru.zelginni.tinycerberusbot.bot
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.zelginni.tinycerberusbot.chat.ChatService
+import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.user.UserService
 
 @Service
 class CommandService(
     private val chatService: ChatService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val digestService: DigestService
 ) {
 
     fun warn(update: Update): CommandResult {
@@ -51,4 +53,21 @@ class CommandService(
         )
     }
 
+    fun digest(update: Update): CommandResult {
+        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+                ?: return CommandResult(
+                        CommandStatus.Error,
+                        "Аид запретил мне кусаться в этом чате."
+                )
+        val repliedMessage = update.message.replyToMessage
+                ?: return CommandResult(
+                        CommandStatus.Error,
+                        "Не вижу реплай. Если он есть, попробуйте сообщение посвежее"
+                )
+        val linkToMessage = "https://t.me/c/" + chat.id + "/" + repliedMessage.messageId
+        digestService.addDigest(chat, linkToMessage, update.message.text)
+        return CommandResult(
+                CommandStatus.Success, "Добавлено."
+        )
+    }
 }

@@ -3,6 +3,7 @@ package ru.zelginni.tinycerberusbot.bot
 import org.apache.commons.collections4.map.PassiveExpiringMap
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.TelegramBotsApi
@@ -16,7 +17,12 @@ import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
+import ru.zelginni.tinycerberusbot.chat.ChatService
+import ru.zelginni.tinycerberusbot.chat.ChatViewDto
+import ru.zelginni.tinycerberusbot.digest.Digest
+import ru.zelginni.tinycerberusbot.digest.DigestService
 import java.io.Serializable
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
@@ -24,7 +30,9 @@ import kotlin.collections.HashMap
 
 @Component
 class TinyCerberusBot(
-    private val commandService: CommandService
+    private val commandService: CommandService,
+    private val chatService: ChatService,
+    private val digestService: DigestService
 ): TelegramLongPollingBot() {
 
     private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
@@ -85,6 +93,36 @@ class TinyCerberusBot(
         when(commandResult.resultAction) {
             ResultAction.Ban -> banMember(update)
             ResultAction.Print -> {}
+        }
+    }
+
+    @Scheduled(cron = "0 0 20 * * *")
+    fun dailyDigest() {
+        val format = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+        val allchats: List<ChatViewDto> = chatService.getAllChats()
+        for (chat in allchats) {
+            val digest: List<Digest>? = digestService.fetchDigest(chat)
+            if (digest.isNullOrEmpty()) {
+                return
+            } else {
+                val digestList = StringBuilder()
+                for (digestEntry in digest) {
+                    digestList.append("\n")
+                    digestList.append(digestEntry.linkToMessage)
+                    digestList.append(" ")
+                    digestList.append(digestEntry.createdOn?.format(format))
+                    digestList.append("\n")
+                    digestList.append(digestEntry.description)
+                    digestList.append("\n")
+                }
+                val message = SendMessage().apply {
+                    chat.telegramId
+                    text = "Дайджест за сутки:" + "\n" +
+                            digestList
+
+                }
+                perform(message)
+            }
         }
     }
 

@@ -12,6 +12,11 @@ enum class BotCommand {
         override fun performCommand(commandService: CommandService, update: Update): CommandResult {
             return commandService.status(update)
         }
+    },
+    Digest {
+        override fun performCommand(commandService: CommandService, update: Update): CommandResult {
+            return commandService.digest(update)
+        }
     };
 
     abstract fun performCommand(commandService: CommandService, update: Update): CommandResult
