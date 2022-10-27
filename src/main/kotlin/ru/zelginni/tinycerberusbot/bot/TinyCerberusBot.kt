@@ -62,17 +62,21 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
+        if (!update.hasMessage()
+            || !update.message.hasText()) {
+            return
+        }
         processBayan(update)
         processCommand(update)
     }
 
     private fun processBayan(update: Update) {
-        if (update.message.text.lowercase().contains("баян")
-            && !update.message.from.isBot
+        if (!update.message.text.lowercase().contains("баян")
+            || update.message.from.isBot
         ) {
-            respondToBayan(update)
             return
         }
+        respondToBayan(update)
     }
 
     private fun respondToBayan(update: Update) {
@@ -83,9 +87,7 @@ class TinyCerberusBot(
     }
 
     private fun processCommand(update: Update) {
-        if (!update.hasMessage()
-            || !update.message.hasText()
-            || !update.message.isCommand
+        if (!update.message.isCommand
             || !update.message.text.contains(botUsername)
             || !isAdmin(update.message.from, update.message.chat)
         ) {
@@ -96,6 +98,14 @@ class TinyCerberusBot(
             sendSimpleText(update, "Я не понимаю :(")
             return
         }
+
+        if (command == BotCommand.Warn
+            && update.message.replyToMessage != null
+            && isAdmin(update.message.replyToMessage.from, update.message.chat)) {
+            sendSimpleText(update, "Админов я кусать не буду.")
+            return
+        }
+
         val commandResult = try {
             command.performCommand(commandService, update)
         } catch (e: Exception) {
