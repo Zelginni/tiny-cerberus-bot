@@ -126,6 +126,7 @@ class TinyCerberusBot(
                     chat.telegramId
                     text = "Дайджест за сутки:" + "\n" +
                             digestList
+                    disableNotification = true
                 }
                 perform(message)
             }
