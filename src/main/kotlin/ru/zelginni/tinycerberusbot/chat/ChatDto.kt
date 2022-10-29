@@ -10,7 +10,8 @@ data class ChatViewDto(
     var name: String? = null,
     var telegramId: String? = null,
     var enabled: Boolean? = null,
-    var warnLimit: Int? = null
+    var warnLimit: Int? = null,
+    var bayanEnabled: Boolean? = null
 )
 
 data class AllChatResponse(
