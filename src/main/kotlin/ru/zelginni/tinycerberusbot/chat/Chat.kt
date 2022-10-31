@@ -18,5 +18,7 @@ data class Chat(
     @Column(name = "warn_limit")
     var warnLimit: Int? = null,
     @Column(name = "bayan_enabled")
-    var bayanEnabled: Boolean? = false
+    var bayanEnabled: Boolean? = false,
+    @Column(name = "voice_response_enabled")
+    var voiceResponseEnabled: Boolean? = false
 )

@@ -13,11 +13,14 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Chat
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
+import org.telegram.telegrambots.meta.api.objects.Voice
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import ru.zelginni.tinycerberusbot.bayan.Bayan
 import ru.zelginni.tinycerberusbot.bayan.BayanService
+import ru.zelginni.tinycerberusbot.voice.VoiceResponse
+import ru.zelginni.tinycerberusbot.voice.VoiceResponseService
 import java.io.Serializable
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -27,7 +30,8 @@ import kotlin.collections.HashMap
 @Component
 class TinyCerberusBot(
     private val commandService: CommandService,
-    private val bayanService: BayanService
+    private val bayanService: BayanService,
+    private val voiceResponseService: VoiceResponseService
 ): TelegramLongPollingBot() {
 
     private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
@@ -66,8 +70,18 @@ class TinyCerberusBot(
             || !update.message.hasText()) {
             return
         }
+        processVoice(update)
         processBayan(update)
         processCommand(update)
+    }
+
+    private fun processVoice(update: Update) {
+        if (!isVoice(update)
+                || update.message.from.isBot
+        ) {
+            return
+        }
+        respondToVoice(update)
     }
 
     private fun processBayan(update: Update) {
@@ -77,6 +91,13 @@ class TinyCerberusBot(
             return
         }
         respondToBayan(update)
+    }
+
+    private fun respondToVoice(update: Update) {
+        val voiceResponse: VoiceResponse? = voiceResponseService.respondToVoice(update)
+        if (voiceResponse != null) {
+            voiceResponse.response?.let { sendSimpleText(update, it) }
+        }
     }
 
     private fun respondToBayan(update: Update) {
@@ -142,6 +163,10 @@ class TinyCerberusBot(
 
     private fun isAdmin(user: User, chat: Chat): Boolean {
         return getAdminList(chat).any { it.user.id == user.id }
+    }
+
+    private fun isVoice(update: Update): Boolean {
+        return update.message.voice.equals(Voice())
     }
 
     private fun getAdminList(chat: Chat): List<ChatMember> {
