@@ -67,11 +67,23 @@ class CommandService(
                         CommandStatus.Error,
                         "Не вижу реплай. Если он есть, попробуйте сообщение посвежее"
                 )
-        val linkToMessage = "https://t.me/c/${chat.telegramId}/${repliedMessage.messageId}"
-        val text = update.message.text
-        digestService.addDigest(chat, linkToMessage, text.substring(text.indexOf(' ')))
+        val linkToMessage = "https://t.me/c/${getChatIdForLink(chat.telegramId)}/${repliedMessage.messageId}"
+        digestService.addDigest(chat, linkToMessage, getDescription(update))
         return CommandResult(
                 CommandStatus.Success, "Добавлено."
         )
+    }
+
+    private fun getDescription(update: Update): String {
+        val text = update.message.text
+        val descriptionStart = text.indexOf(' ')
+        if (descriptionStart < 0) {
+            return "добавил(а) @${update.message.from.userName}"
+        }
+        return text.substring(descriptionStart)
+    }
+
+    private fun getChatIdForLink(telegramId: String?): String? {
+        return telegramId?.substring(4)
     }
 }
