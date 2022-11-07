@@ -5,9 +5,11 @@ fun ChatInsertDto.toDbModel(): Chat
 
 fun Chat.toViewModel(): ChatViewDto
     = ChatViewDto(
+    id = id,
     name = name,
     telegramId = telegramId,
     enabled = enabled,
     warnLimit = warnLimit,
-    bayanEnabled = bayanEnabled
+    bayanEnabled = bayanEnabled,
+    digestEnabled = digestEnabled
 )

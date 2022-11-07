@@ -2,7 +2,7 @@ package ru.zelginni.tinycerberusbot.bot
 
 import org.telegram.telegrambots.meta.api.objects.Update
 
-enum class BotCommand {
+enum class BotCommand(val requireAdmin: Boolean = true) {
     Warn {
         override fun performCommand(commandService: CommandService, update: Update): CommandResult {
             return commandService.warn(update)
@@ -11,6 +11,11 @@ enum class BotCommand {
     Status {
         override fun performCommand(commandService: CommandService, update: Update): CommandResult {
             return commandService.status(update)
+        }
+    },
+    Digest(requireAdmin = false) {
+        override fun performCommand(commandService: CommandService, update: Update): CommandResult {
+            return commandService.digest(update)
         }
     };
 

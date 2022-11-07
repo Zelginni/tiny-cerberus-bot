@@ -46,6 +46,7 @@ class ChatController(
     fun disableChat(@RequestParam telegramId: String): ResponseEntity<String> {
         logger.info("Disable chat $telegramId")
         chatService.disableChat(telegramId)
+        chatService.cleanCache()
         return ResponseEntity.ok("Chat $telegramId disabled")
     }
 
@@ -58,37 +59,42 @@ class ChatController(
     fun enableChat(@RequestParam telegramId: String): ResponseEntity<String> {
         logger.info("Enable chat $telegramId")
         chatService.enableChat(telegramId)
+        chatService.cleanCache()
         return ResponseEntity.ok("Chat $telegramId enabled")
     }
 
-    @PutMapping("/enable/bayan")
+    @PutMapping("/enable/{feature}")
     @Operation(
-        summary = "Enable bayan",
-        description = "Enable bayan feature for chat",
+        summary = "Enable feature",
+        description = "Enable feature for chat",
         security = [SecurityRequirement(name = "basicAuth")]
     )
-    fun enableBayan(@RequestParam telegramId: String): ResponseEntity<String> {
-        logger.info("Enable bayan in chat $telegramId")
-        chatService.enableBayanInChat(telegramId)
-        return ResponseEntity.ok("Bayan in chat $telegramId enabled")
+    fun enableFeature(@RequestParam telegramId: String, @PathVariable feature: String): ResponseEntity<String> {
+        logger.info("Enable feature $feature in chat $telegramId")
+        val chatFeature = getFeature(feature) ?: return ResponseEntity.badRequest().body("No such feature as $feature")
+        chatService.enableFeatureInChat(telegramId, chatFeature)
+        chatService.cleanCache()
+        return ResponseEntity.ok("$feature in chat $telegramId enabled")
     }
 
-    @PutMapping("/disable/bayan")
+    @PutMapping("/disable/{feature}")
     @Operation(
-        summary = "Disable bayan",
-        description = "Disable bayan feature for chat",
+        summary = "Disable feature",
+        description = "Disable feature for chat",
         security = [SecurityRequirement(name = "basicAuth")]
     )
-    fun disableBayan(@RequestParam telegramId: String): ResponseEntity<String> {
-        logger.info("Disable bayan in chat $telegramId")
-        chatService.disableBayanInChat(telegramId)
-        return ResponseEntity.ok("Bayan in chat $telegramId enabled")
+    fun disableFeature(@RequestParam telegramId: String, @PathVariable feature: String): ResponseEntity<String> {
+        logger.info("Disable feature $feature in chat $telegramId")
+        val chatFeature = getFeature(feature) ?: return ResponseEntity.badRequest().body("No such feature as $feature")
+        chatService.disableFeatureInChat(telegramId, chatFeature)
+        chatService.cleanCache()
+        return ResponseEntity.ok("$feature in chat $telegramId enabled")
     }
 
     @GetMapping("/cache/clean")
     @Operation(
-        summary = "Enable chat",
-        description = "Enable chat for bot",
+        summary = "Clean chat cache",
+        description = "Clean chat cache",
         security = [SecurityRequirement(name = "basicAuth")]
     )
     fun cleanCache(): ResponseEntity<String> {

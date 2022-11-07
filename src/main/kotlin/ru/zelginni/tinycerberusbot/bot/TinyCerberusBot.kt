@@ -3,12 +3,14 @@ package ru.zelginni.tinycerberusbot.bot
 import org.apache.commons.collections4.map.PassiveExpiringMap
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod
 import org.telegram.telegrambots.meta.api.methods.groupadministration.BanChatMember
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators
+import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Chat
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -18,6 +20,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import ru.zelginni.tinycerberusbot.bayan.Bayan
 import ru.zelginni.tinycerberusbot.bayan.BayanService
+import ru.zelginni.tinycerberusbot.chat.ChatService
+import ru.zelginni.tinycerberusbot.digest.DigestService
+import ru.zelginni.tinycerberusbot.chat.ChatViewDto
 import java.io.Serializable
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -27,7 +32,9 @@ import kotlin.collections.HashMap
 @Component
 class TinyCerberusBot(
     private val commandService: CommandService,
-    private val bayanService: BayanService
+    private val bayanService: BayanService,
+    private val chatService: ChatService,
+    private val digestService: DigestService
 ): TelegramLongPollingBot() {
 
     private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
@@ -89,13 +96,15 @@ class TinyCerberusBot(
     private fun processCommand(update: Update) {
         if (!update.message.isCommand
             || !update.message.text.contains(botUsername)
-            || !isAdmin(update.message.from, update.message.chat)
         ) {
             return
         }
         val command = getCommand(update.message.text)
         if (command == null) {
             sendSimpleText(update, "Я не понимаю :(")
+            return
+        }
+        if (command.requireAdmin && !isAdmin(update.message.from, update.message.chat)) {
             return
         }
 
@@ -120,6 +129,26 @@ class TinyCerberusBot(
             ResultAction.Ban -> banMember(update)
             ResultAction.Print -> {}
         }
+    }
+
+    @Scheduled(cron = "\${bot.digest.cron}")
+    fun dailyDigest() {
+        val allChats: List<ChatViewDto> = chatService.getAllChats()
+        allChats.filter {
+                chat -> chat.digestEnabled == true
+                && chat.id != null
+                && chat.telegramId != null
+        }.forEach { chat -> sendDigest(chat)}
+    }
+
+    private fun sendDigest(chat: ChatViewDto) {
+        val digest = digestService.compileDigest(chat.id ?: -1) ?: return
+        val message = perform(SendMessage().apply {
+            chatId = chat.telegramId ?: ""
+            text = digest
+            disableNotification = true
+        }) ?: return
+        perform(PinChatMessage(message.chatId.toString(), message.messageId, true))
     }
 
     private fun sendSimpleText(update: Update, messageText: String) {
