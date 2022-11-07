@@ -18,6 +18,10 @@ import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
+import ru.zelginni.tinycerberusbot.bayan.Bayan
+import ru.zelginni.tinycerberusbot.bayan.BayanService
+import ru.zelginni.tinycerberusbot.chat.ChatService
+import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.chat.ChatViewDto
 import ru.zelginni.tinycerberusbot.digest.Digest
@@ -32,6 +36,7 @@ import kotlin.collections.HashMap
 @Component
 class TinyCerberusBot(
     private val commandService: CommandService,
+    private val bayanService: BayanService,
     private val chatService: ChatService,
     private val digestService: DigestService
 ): TelegramLongPollingBot() {
@@ -69,25 +74,57 @@ class TinyCerberusBot(
             return
         }
         if (!update.hasMessage()
-            || !update.message.hasText()
-            || !update.message.isCommand
+            || !update.message.hasText()) {
+            return
+        }
+
+        if (update.hasMessage()//TODO refactor
+            && update.message.hasText()
+            && update.message.text.contains("Дайджест")
+            && isBot(update.message.from)) {
+            PinChatMessage(update.message.chatId.toString(), update.message.messageId, true)
+        }
+        processBayan(update)
+        processCommand(update)
+    }
+
+    private fun processBayan(update: Update) {
+        if (!update.message.text.lowercase().contains("баян")
+            || update.message.from.isBot
+        ) {
+            return
+        }
+        respondToBayan(update)
+    }
+
+    private fun respondToBayan(update: Update) {
+        val bayan: Bayan? = bayanService.respondToBayan(update)
+        if (bayan != null) {
+            bayan.response?.let { sendSimpleText(update, it) }
+        }
+    }
+
+    private fun processCommand(update: Update) {
+        if (!update.message.isCommand
             || !update.message.text.contains(botUsername)
             || !isAdmin(update.message.from, update.message.chat)
         ) {
             return
-        }
-        if (update.hasMessage()
-                && update.message.hasText()
-                && update.message.text.contains("Дайджест")
-                && isBot(update.message.from)) {
-            PinChatMessage(update.message.chatId.toString(), update.message.messageId, true)
         }
         val command = getCommand(update.message.text)
         if (command == null) {
             sendSimpleText(update, "Я не понимаю :(")
             return
         }
-        val commandResult =  try {
+
+        if (command == BotCommand.Warn
+            && update.message.replyToMessage != null
+            && isAdmin(update.message.replyToMessage.from, update.message.chat)) {
+            sendSimpleText(update, "Админов я кусать не буду.")
+            return
+        }
+
+        val commandResult = try {
             command.performCommand(commandService, update)
         } catch (e: Exception) {
             logger.error("Command not performed: $command", e)
