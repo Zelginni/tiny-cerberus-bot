@@ -14,6 +14,7 @@ class ChatService(
         chatRepository.saveAndFlush(chat.toDbModel())
     }
 
+    @Cacheable(ALL_CHAT_CACHE)
     fun getAllChats(): List<ChatViewDto> {
         return chatRepository.findAll().map { chat -> chat.toViewModel() }
     }
@@ -26,12 +27,12 @@ class ChatService(
         changeChat(telegramId) {enabled = true}
     }
 
-    fun disableBayanInChat(telegramId: String) {
-        changeChat(telegramId) {bayanEnabled = false}
+    fun disableFeatureInChat(telegramId: String, chatFeature: ChatFeature) {
+        changeChat(telegramId) {chatFeature.disable(this)}
     }
 
-    fun enableBayanInChat(telegramId: String) {
-        changeChat(telegramId) {bayanEnabled = true}
+    fun enableFeatureInChat(telegramId: String, chatFeature: ChatFeature) {
+        changeChat(telegramId) {chatFeature.enable(this)}
     }
 
     private fun changeChat(telegramId: String, change: Chat.() -> Unit) {
@@ -46,8 +47,9 @@ class ChatService(
         return chatRepository.findByTelegramIdAndEnabledTrue(telegramId)
     }
 
-    @CacheEvict(CHAT_CACHE)
+    @CacheEvict(ALL_CHAT_CACHE, CHAT_CACHE)
     fun cleanCache() {}
 }
 
+const val ALL_CHAT_CACHE = "ALL_CHAT_CACHE"
 const val CHAT_CACHE = "CHAT_CACHE"

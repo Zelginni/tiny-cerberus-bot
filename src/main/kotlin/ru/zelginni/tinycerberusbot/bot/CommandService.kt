@@ -56,17 +56,20 @@ class CommandService(
 
     fun digest(update: Update): CommandResult {
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
-                ?: return CommandResult(
-                        CommandStatus.Error,
-                        "Аид запретил мне кусаться в этом чате."
-                )
+        if (chat == null || chat.digestEnabled == false) {
+            return CommandResult(
+                CommandStatus.Error,
+                "Аид запретил мне собирать дайджест в этом чате."
+            )
+        }
         val repliedMessage = update.message.replyToMessage
                 ?: return CommandResult(
                         CommandStatus.Error,
                         "Не вижу реплай. Если он есть, попробуйте сообщение посвежее"
                 )
-        val linkToMessage = "https://t.me/c/" + chat.id + "/" + repliedMessage.messageId
-        digestService.addDigest(chat, linkToMessage, update.message.text)
+        val linkToMessage = "https://t.me/c/${chat.telegramId}/${repliedMessage.messageId}"
+        val text = update.message.text
+        digestService.addDigest(chat, linkToMessage, text.substring(text.indexOf(' ')))
         return CommandResult(
                 CommandStatus.Success, "Добавлено."
         )

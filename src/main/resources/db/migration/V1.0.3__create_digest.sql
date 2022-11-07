@@ -7,3 +7,7 @@ create table if not exists cerberus.digest (
                                              PRIMARY KEY(id),
                                              FOREIGN KEY(chat_id) REFERENCES chat(id)
 );
+
+alter table cerberus.chat add column digest_enabled boolean;
+
+update cerberus.chat set digest_enabled = false;

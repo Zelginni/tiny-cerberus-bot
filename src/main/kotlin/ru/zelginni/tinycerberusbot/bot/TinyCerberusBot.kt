@@ -22,12 +22,8 @@ import ru.zelginni.tinycerberusbot.bayan.Bayan
 import ru.zelginni.tinycerberusbot.bayan.BayanService
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
-import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.chat.ChatViewDto
-import ru.zelginni.tinycerberusbot.digest.Digest
-import ru.zelginni.tinycerberusbot.digest.DigestService
 import java.io.Serializable
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
@@ -77,13 +73,6 @@ class TinyCerberusBot(
             || !update.message.hasText()) {
             return
         }
-
-        if (update.hasMessage()//TODO refactor
-            && update.message.hasText()
-            && update.message.text.contains("Дайджест")
-            && isBot(update.message.from)) {
-            PinChatMessage(update.message.chatId.toString(), update.message.messageId, true)
-        }
         processBayan(update)
         processCommand(update)
     }
@@ -107,13 +96,15 @@ class TinyCerberusBot(
     private fun processCommand(update: Update) {
         if (!update.message.isCommand
             || !update.message.text.contains(botUsername)
-            || !isAdmin(update.message.from, update.message.chat)
         ) {
             return
         }
         val command = getCommand(update.message.text)
         if (command == null) {
             sendSimpleText(update, "Я не понимаю :(")
+            return
+        }
+        if (command.requireAdmin && !isAdmin(update.message.from, update.message.chat)) {
             return
         }
 
@@ -140,34 +131,24 @@ class TinyCerberusBot(
         }
     }
 
-    @Scheduled(cron = "0 0 20 * * *")
+    @Scheduled(cron = "\${bot.digest.cron}")
     fun dailyDigest() {
-        val format = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
-        val allchats: List<ChatViewDto> = chatService.getAllChats()
-        for (chat in allchats) {
-            val digest: List<Digest>? = digestService.fetchDigest(chat)
-            if (digest.isNullOrEmpty()) {
-                return
-            } else {
-                val digestList = StringBuilder()
-                for (digestEntry in digest) {
-                    digestList.append("\n")
-                    digestList.append(digestEntry.linkToMessage)
-                    digestList.append(" ")
-                    digestList.append(digestEntry.createdOn?.format(format))
-                    digestList.append("\n")
-                    digestList.append(digestEntry.description)
-                    digestList.append("\n")
-                }
-                val message = SendMessage().apply {
-                    chat.telegramId
-                    text = "Дайджест за сутки:" + "\n" +
-                            digestList
-                    disableNotification = true
-                }
-                perform(message)
-            }
-        }
+        val allChats: List<ChatViewDto> = chatService.getAllChats()
+        allChats.filter {
+                chat -> chat.digestEnabled == true
+                && chat.id != null
+                && chat.telegramId != null
+        }.forEach { chat -> sendDigest(chat)}
+    }
+
+    private fun sendDigest(chat: ChatViewDto) {
+        val digest = digestService.compileDigest(chat.id ?: -1) ?: return
+        val message = perform(SendMessage().apply {
+            chatId = chat.telegramId ?: ""
+            text = digest
+            disableNotification = true
+        }) ?: return
+        perform(PinChatMessage(message.chatId.toString(), message.messageId, true))
     }
 
     private fun sendSimpleText(update: Update, messageText: String) {
@@ -186,10 +167,6 @@ class TinyCerberusBot(
             userId = update.message.replyToMessage.from.id
         }
         perform(ban)
-    }
-
-    private fun isBot(user: User): Boolean {
-        return user.isBot
     }
 
     private fun isAdmin(user: User, chat: Chat): Boolean {
