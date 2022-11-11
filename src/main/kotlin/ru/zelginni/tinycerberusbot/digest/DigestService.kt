@@ -49,6 +49,10 @@ class DigestService(
         return newPinnedDigest
     }
 
+    fun deleteDigest(chatId: Long) {
+        digestRepository.deleteAllByChatId(chatId)
+    }
+
     fun fetchOutdatedDigest(): PinnedDigest {
         return pinnedDigestRepository.findByCreatedOnBefore(LocalDateTime.now().minusHours(30L))
     }

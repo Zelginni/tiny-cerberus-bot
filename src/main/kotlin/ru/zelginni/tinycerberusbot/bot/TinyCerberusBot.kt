@@ -155,6 +155,7 @@ class TinyCerberusBot(
         perform(PinChatMessage(message.chatId.toString(), message.messageId, true))
         chatService.getEnabledChatByTelegramId(chat.id.toString())?.let { digestService.addPinnedDigest(it, message.messageId) }
         perform(UnpinChatMessage(message.chatId.toString(), digestService.fetchOutdatedDigest().pinnedMessageId))
+        chat.id?.let { digestService.deleteDigest(it) }
         digestService.deletePinnedDigest()
     }
 
