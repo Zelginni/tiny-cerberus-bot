@@ -23,7 +23,10 @@ class DigestService(
     }
 
     fun compileDigest(chatId: Long): String? {
-        val digest: List<Digest> = fetchDigest(chatId) ?: return null
+        val digest: List<Digest>? = fetchDigest(chatId)
+        if (digest.isNullOrEmpty()) {
+            return ""
+        }
         val digestList = StringBuilder()
         for (digestEntry in digest) {
             digestList.append("\n")

@@ -22,7 +22,7 @@ class CommandService(
         val repliedMessage = update.message.replyToMessage
                 ?: return CommandResult(
                         CommandStatus.Error,
-                        "Не вижу реплай. Если он есть, попробуйте сообщение посвежее"
+                        "Не вижу реплай. Если он есть, попробуйте сообщение посвежее."
                 )
         val warnedUser = repliedMessage.from
         val user = userService.createOrGetUser(warnedUser.id.toString(), warnedUser.userName, chat)
@@ -37,7 +37,7 @@ class CommandService(
                     ResultAction.Ban
             )
         } else {
-            val limitText = if (warnLimit > 0) "равен $warnLimit" else "не установлен"
+            val limitText = if (warnLimit > 0) "равен $warnLimit" else "не установлен."
             CommandResult(
                     CommandStatus.Success,
                     "@${warnedUser.userName} получает варн №$warnCount. Лимит варнов в чате $limitText."
@@ -64,7 +64,7 @@ class CommandService(
         val repliedMessage = update.message.replyToMessage
                 ?: return CommandResult(
                         CommandStatus.Error,
-                        "Эта команда должна быть использована ответом на сообщение. Если оно есть, попробуйте сообщение посвежее"
+                        "Эта команда должна быть использована ответом на сообщение. Если оно есть, попробуйте сообщение посвежее."
                 )
         if (repliedMessage.from.isBot
                 && repliedMessage.text.contains("Дайджест")) {
@@ -76,10 +76,11 @@ class CommandService(
         val linkToMessage = "https://t.me/c/${chat.telegramId}/${repliedMessage.messageId}"
         var text = update.message.text
         val beginOfDescriptionIndex = text.indexOf(' ')
-        text = if (beginOfDescriptionIndex == -1) {
+        text = if (beginOfDescriptionIndex == -1
+                || beginOfDescriptionIndex == text.length) {
             repliedMessage.text.substring(0, 101)
         } else {
-            text.substring(text.indexOf(' '))
+            text.substring(beginOfDescriptionIndex)
         }
         val repliedMessageDate = repliedMessage.date
         digestService.addDigest(chat, linkToMessage, text, repliedMessageDate)
