@@ -66,6 +66,13 @@ class CommandService(
                         CommandStatus.Error,
                         "Эта команда должна быть использована ответом на сообщение. Если оно есть, попробуйте сообщение посвежее"
                 )
+        if (repliedMessage.from.isBot
+                && repliedMessage.text.contains("Дайджест")) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Наркоман штоле?"
+            )
+        }
         val linkToMessage = "https://t.me/c/${chat.telegramId}/${repliedMessage.messageId}"
         var text = update.message.text
         val beginOfDescriptionIndex = text.indexOf(' ')
