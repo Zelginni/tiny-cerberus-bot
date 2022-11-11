@@ -146,6 +146,7 @@ class TinyCerberusBot(
         val digest = digestService.compileDigest(chat.id ?: -1) ?: return
         if (digest.isBlank()) {
             chat.id?.let { sendSimpleText(it, "За прошедшие сутки в дайджест ничего не добавили.") }
+            return
         }
         val message = perform(SendMessage().apply {
             chatId = chat.telegramId ?: ""
