@@ -115,6 +115,11 @@ class TinyCerberusBot(
             return
         }
 
+        if (command == BotCommand.Warn && update.message.replyToMessage?.from?.userName == botUsername) {
+            sendSimpleText(update, "Себя я кусать не буду.")
+            return
+        }
+
         val commandResult = try {
             command.performCommand(commandService, update)
         } catch (e: Exception) {
