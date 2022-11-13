@@ -136,28 +136,36 @@ class TinyCerberusBot(
     fun dailyDigest() {
         val allChats: List<ChatViewDto> = chatService.getAllChats()
         allChats.filter {
-                chat -> chat.digestEnabled == true
+                chat -> chat.enabled == true
+                && chat.digestEnabled == true
                 && chat.id != null
                 && chat.telegramId != null
         }.forEach { chat -> sendDigest(chat)}
+        cleanDigestPins()
     }
 
     private fun sendDigest(chat: ChatViewDto) {
+        val chatId = chat.telegramId ?: return
         val digest = digestService.compileDigest(chat.id ?: -1) ?: return
         if (digest.isBlank()) {
-            chat.id?.let { sendSimpleText(it, "За прошедшие сутки в дайджест ничего не добавили.") }
+            sendSimpleText(chatId.toLong(), "За прошедшие сутки в дайджест ничего не добавили.")
             return
         }
         val message = perform(SendMessage().apply {
-            chatId = chat.telegramId ?: ""
+            this.chatId = chatId
             text = digest
             disableNotification = true
         }) ?: return
         perform(PinChatMessage(message.chatId.toString(), message.messageId, true))
-        chatService.getEnabledChatByTelegramId(chat.id.toString())?.let { digestService.addPinnedDigest(it, message.messageId) }
-        perform(UnpinChatMessage(message.chatId.toString(), digestService.fetchOutdatedDigest().pinnedMessageId))
-        chat.id?.let { digestService.deleteDigest(it) }
-        digestService.deletePinnedDigest()
+        digestService.addPinnedDigest(chatId, message.messageId)
+        digestService.deleteDigest(chatId)
+    }
+
+    private fun cleanDigestPins() {
+        digestService.fetchOutdatedDigests()?.filter { it.chat?.telegramId != null }?.forEach {
+            perform(UnpinChatMessage(it.chat?.telegramId ?: "", it.pinnedMessageId))
+        }
+        digestService.deletePinnedDigests()
     }
 
     private fun sendSimpleText(chatId: Long, messageText: String) {

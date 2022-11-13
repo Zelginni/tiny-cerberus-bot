@@ -1,8 +1,8 @@
 package ru.zelginni.tinycerberusbot.bot
 
 import org.springframework.stereotype.Service
+import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.user.UserService
@@ -75,7 +75,7 @@ class CommandService(
             )
         }
         val linkToMessage = "https://t.me/c/${getChatIdForLink(chat.telegramId)}/${repliedMessage.messageId}"
-        digestService.addDigest(chat, linkToMessage, getDescription(update))
+        digestService.addDigest(chat, linkToMessage, getDescription(update), repliedMessage.date)
         return CommandResult(
                 CommandStatus.Success, "Добавлено."
         )
@@ -85,10 +85,24 @@ class CommandService(
         val text = update.message.text
         val beginOfDescriptionIndex = text.indexOf(' ')
         return if (beginOfDescriptionIndex == -1
-            || beginOfDescriptionIndex == text.length) {
-            update.message.replyToMessage.text.substring(0, 101)
+                || beginOfDescriptionIndex == text.length) {
+            createDescription(update.message.replyToMessage)
         } else {
             text.substring(beginOfDescriptionIndex)
+        }
+    }
+
+    private fun createDescription(repliedMessage: Message): String {
+        val firstName = repliedMessage.from.firstName
+        val lastName = repliedMessage.from.lastName ?: ""
+        val author = "${firstName.ifBlank { "" }} ${lastName.ifBlank { "" }}".trim()
+        return if (repliedMessage.hasPhoto() && !repliedMessage.hasText()) {
+            "Фото от $author"
+        } else if (repliedMessage.hasDocument() && !repliedMessage.hasText()) {
+            "Файл от $author"
+        } else {
+            val text = repliedMessage.text
+            text.substring(0, if (text.length < 101) text.length else 101)
         }
     }
 

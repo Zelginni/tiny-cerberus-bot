@@ -1,7 +1,9 @@
 package ru.zelginni.tinycerberusbot.digest
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import ru.zelginni.tinycerberusbot.chat.Chat
+import ru.zelginni.tinycerberusbot.chat.ChatService
 import java.time.Instant
 
 import java.time.LocalDateTime
@@ -11,7 +13,8 @@ import java.time.format.DateTimeFormatter
 @Service
 class DigestService(
         private val digestRepository: DigestRepository,
-        private val pinnedDigestRepository: PinnedDigestRepository
+        private val pinnedDigestRepository: PinnedDigestRepository,
+        private val chatService: ChatService
 ) {
     private val format = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
 
@@ -45,22 +48,27 @@ class DigestService(
             chatId, LocalDateTime.now().minusHours(24L), LocalDateTime.now())
     }
 
-    fun addPinnedDigest(chat: Chat, pinnedMessageId: Int): PinnedDigest {
+    @Transactional
+    fun addPinnedDigest(telegramChatId: String, pinnedMessageId: Int): PinnedDigest {
+        val chat = chatService.getEnabledChatByTelegramId(telegramChatId)
         val newPinnedDigest = PinnedDigest(chat = chat, pinnedMessageId = pinnedMessageId,
                 createdOn = LocalDateTime.now())
         pinnedDigestRepository.saveAndFlush(newPinnedDigest)
         return newPinnedDigest
     }
 
-    fun deleteDigest(chatId: Long) {
-        digestRepository.deleteAllByChatId(chatId)
+    @Transactional
+    fun deleteDigest(telegramChatId: String) {
+        val chat = chatService.getEnabledChatByTelegramId(telegramChatId) ?: return
+        digestRepository.deleteAllByChatId(chat.id ?: throw IllegalStateException("How does chat not have its id?!"))
     }
 
-    fun fetchOutdatedDigest(): PinnedDigest {
+    fun fetchOutdatedDigests(): List<PinnedDigest>? {
         return pinnedDigestRepository.findByCreatedOnBefore(LocalDateTime.now().minusHours(30L))
     }
 
-    fun deletePinnedDigest() {
+    @Transactional
+    fun deletePinnedDigests() {
         pinnedDigestRepository.deleteByCreatedOnBefore(LocalDateTime.now().minusHours(30L))
     }
 }
