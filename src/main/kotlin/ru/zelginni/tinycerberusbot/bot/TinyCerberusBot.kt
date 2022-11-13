@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.methods.BotApiMethod
 import org.telegram.telegrambots.meta.api.methods.groupadministration.BanChatMember
 import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators
 import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage
+import org.telegram.telegrambots.meta.api.methods.pinnedmessages.UnpinChatMessage
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Chat
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -89,7 +90,7 @@ class TinyCerberusBot(
     private fun respondToBayan(update: Update) {
         val bayan: Bayan? = bayanService.respondToBayan(update)
         if (bayan != null) {
-            bayan.response?.let { sendSimpleText(update, it) }
+            bayan.response?.let { sendSimpleReplyText(update, it) }
         }
     }
 
@@ -101,7 +102,7 @@ class TinyCerberusBot(
         }
         val command = getCommand(update.message.text)
         if (command == null) {
-            sendSimpleText(update, "Я не понимаю :(")
+            sendSimpleReplyText(update, "Я не понимаю :(")
             return
         }
         if (command.requireAdmin && !isAdmin(update.message.from, update.message.chat)) {
@@ -111,7 +112,7 @@ class TinyCerberusBot(
         if (command == BotCommand.Warn
             && update.message.replyToMessage != null
             && isAdmin(update.message.replyToMessage.from, update.message.chat)) {
-            sendSimpleText(update, "Админов я кусать не буду.")
+            sendSimpleReplyText(update, "Админов я кусать не буду.")
             return
         }
 
@@ -123,7 +124,7 @@ class TinyCerberusBot(
         }
         logger.info("Command $command, result $commandResult")
         if (commandResult.message != null) {
-            sendSimpleText(update, commandResult.message)
+            sendSimpleReplyText(update, commandResult.message)
         }
         when(commandResult.resultAction) {
             ResultAction.Ban -> banMember(update)
@@ -135,23 +136,47 @@ class TinyCerberusBot(
     fun dailyDigest() {
         val allChats: List<ChatViewDto> = chatService.getAllChats()
         allChats.filter {
-                chat -> chat.digestEnabled == true
+                chat -> chat.enabled == true
+                && chat.digestEnabled == true
                 && chat.id != null
                 && chat.telegramId != null
         }.forEach { chat -> sendDigest(chat)}
+        cleanDigestPins()
     }
 
     private fun sendDigest(chat: ChatViewDto) {
+        val chatId = chat.telegramId ?: return
         val digest = digestService.compileDigest(chat.id ?: -1) ?: return
+        if (digest.isBlank()) {
+            sendSimpleText(chatId.toLong(), "За прошедшие сутки в дайджест ничего не добавили.")
+            return
+        }
         val message = perform(SendMessage().apply {
-            chatId = chat.telegramId ?: ""
+            this.chatId = chatId
             text = digest
             disableNotification = true
         }) ?: return
         perform(PinChatMessage(message.chatId.toString(), message.messageId, true))
+        digestService.addPinnedDigest(chatId, message.messageId)
+        digestService.deleteDigest(chatId)
     }
 
-    private fun sendSimpleText(update: Update, messageText: String) {
+    private fun cleanDigestPins() {
+        digestService.fetchOutdatedDigests()?.filter { it.chat?.telegramId != null }?.forEach {
+            perform(UnpinChatMessage(it.chat?.telegramId ?: "", it.pinnedMessageId))
+        }
+        digestService.deletePinnedDigests()
+    }
+
+    private fun sendSimpleText(chatId: Long, messageText: String) {
+        val message = SendMessage().apply {
+            setChatId(chatId)
+            text = messageText
+        }
+        perform(message)
+    }
+
+    private fun sendSimpleReplyText(update: Update, messageText: String) {
         val message = SendMessage().apply {
             setChatId(update.message.chatId)
             text = messageText
