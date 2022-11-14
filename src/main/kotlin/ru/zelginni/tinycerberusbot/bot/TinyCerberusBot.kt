@@ -95,8 +95,8 @@ class TinyCerberusBot(
     }
 
     private fun processCommand(update: Update) {
-        if (!update.message.isCommand
-            || !update.message.text.contains(botUsername)
+        if ((!update.message.isCommand || !update.message.text.contains(botUsername))
+            && !update.message.text.startsWith(ALT_COMMAND_START)
         ) {
             return
         }

@@ -24,7 +24,19 @@ enum class BotCommand(val requireAdmin: Boolean = true) {
 }
 
 fun getCommand(messageText: String): BotCommand? {
+    val endString = if(messageText.startsWith(ALT_COMMAND_START)) {
+        val firstSpace = messageText.indexOf(" ")
+        if (firstSpace > 0) {
+            firstSpace
+        } else {
+            messageText.length
+        }
+    } else {
+        messageText.indexOf("@")
+    }
     return BotCommand.values().firstOrNull {
-        it.name.lowercase() == messageText.substring(1, messageText.indexOf("@"))
+        it.name.lowercase() == messageText.substring(1, endString)
     }
 }
+
+const val ALT_COMMAND_START = "!"
