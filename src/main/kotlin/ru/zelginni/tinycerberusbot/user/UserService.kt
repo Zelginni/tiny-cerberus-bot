@@ -37,4 +37,19 @@ class UserService(
         warnRepository.saveAndFlush(warn)
         return warnRepository.findAllByUserId(user.id ?: throw IllegalStateException("User without id")).size
     }
+
+    fun deleteOneWarnAndReturnWarnCount(user: User): Int {
+        val warns = warnRepository.findAllByUserId(user.id ?: throw IllegalStateException("User without id"))
+        val latest = warns.maxByOrNull { w -> w.dateCreated?:Timestamp.valueOf(LocalDateTime.now()) } ?: return -1
+        warnRepository.delete(latest)
+        return warns.size - 1
+    }
+
+    fun getWarnsByUser(user: User): List<Warn> {
+        return warnRepository.findAllByUserId(user.id ?: throw IllegalStateException("User without id"))
+    }
+
+    fun getWarnsByChat(chat: Chat): List<Warn> {
+        return warnRepository.findAllByChatId(chat.id ?: throw IllegalStateException("Chat without id"))
+    }
 }

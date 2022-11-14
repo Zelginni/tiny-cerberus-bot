@@ -3,9 +3,14 @@ package ru.zelginni.tinycerberusbot.bot
 import org.springframework.stereotype.Service
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
+import ru.zelginni.tinycerberusbot.chat.Chat
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.user.UserService
+import ru.zelginni.tinycerberusbot.warn.Warn
+import java.time.format.DateTimeFormatter
+
+import org.telegram.telegrambots.meta.api.objects.User as TelegramUser
 
 @Service
 class CommandService(
@@ -13,6 +18,8 @@ class CommandService(
     private val userService: UserService,
     private val digestService: DigestService
 ) {
+
+    private val warnTimeFormatter = DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy")
 
     fun warn(update: Update): CommandResult {
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
@@ -26,7 +33,7 @@ class CommandService(
                 "Не вижу реплай. Если он есть, попробуйте сообщение посвежее"
             )
         val warnedUser = repliedMessage.from
-        val user = userService.createOrGetUser(warnedUser.id.toString(), warnedUser.userName, chat)
+        val user = userService.createOrGetUser(warnedUser.id.toString(), warnedUser.writableName(), chat)
 
         val warnAuthor = update.message.from
         val warnCount = userService.makeNewWarnAndReturnWarnCount(user, warnAuthor.id.toString(), warnAuthor.userName)
@@ -34,16 +41,103 @@ class CommandService(
         return if (warnLimit > 0 && chat.warnLimit!! <= warnCount) {
             CommandResult(
                 CommandStatus.Success,
-                "Это был последний варн, @${warnedUser.userName} получает бан.",
+                "Это был последний варн, @${warnedUser.writableName()} получает бан.",
                 ResultAction.Ban
             )
         } else {
-            val limitText = if (warnLimit > 0) "равен $warnLimit" else "не установлен"
             CommandResult(
                 CommandStatus.Success,
-                "@${warnedUser.userName} получает варн №$warnCount. Лимит варнов в чате $limitText."
+                "@${warnedUser.writableName()} получает варн №$warnCount. ${getLimitText(warnLimit)}."
             )
         }
+    }
+
+    private fun TelegramUser.writableName(): String {
+        if (userName != null) {
+            return userName
+        }
+        return "$firstName ${lastName ?: ""}".trim()
+    }
+
+    private fun getLimitText(warnLimit: Int?): String {
+        return "Лимит варнов в чате " + if ((warnLimit ?: -1) > 0) "равен $warnLimit" else "не установлен"
+    }
+
+    fun unWarn(update: Update): CommandResult {
+        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+            ?: return CommandResult(
+                CommandStatus.Error,
+                "Аид запретил мне кусаться в этом чате."
+            )
+        val repliedMessage = update.message.replyToMessage
+            ?: return CommandResult(
+                CommandStatus.Error,
+                "Не вижу реплай. Если он есть, попробуйте сообщение посвежее"
+            )
+        val warnedUser = repliedMessage.from
+        val user = userService.createOrGetUser(warnedUser.id.toString(), warnedUser.writableName(), chat)
+        val warnCount = userService.deleteOneWarnAndReturnWarnCount(user)
+        return if (warnCount < 0) {
+            CommandResult(
+                CommandStatus.Success,
+                "У @${warnedUser.writableName()} не было варнов."
+            )
+        } else {
+            CommandResult(
+                CommandStatus.Success,
+                "Один варн для @${warnedUser.writableName()} удален. Количество варнов: $warnCount."
+            )
+        }
+    }
+
+    fun statWarn(update: Update): CommandResult {
+        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+            ?: return CommandResult(
+                CommandStatus.Error,
+                "Аид запретил мне кусаться в этом чате."
+            )
+        val repliedMessage = update.message.replyToMessage
+        val text = if (repliedMessage == null) {
+            getAllStatWarn(chat)
+        } else {
+            getStatWarnByUser(chat, repliedMessage)
+        }
+        return CommandResult(CommandStatus.Success, text)
+    }
+
+    private fun getAllStatWarn(chat: Chat): String {
+        val warns = userService.getWarnsByChat(chat)
+        if (warns.isEmpty()) {
+            return "В этом чате нет варнов."
+        }
+        val warnsByUser: Map<Long, List<Warn>> = warns.groupBy { warn -> warn.user?.id ?: -1 }
+        val warnStatSb = StringBuilder()
+        warnStatSb.append("Варны в чате:\n")
+        warnsByUser.values.forEach {
+            val user = it.first().user
+            if (user != null) {
+                warnStatSb.append("${user.username} — ${it.size}\n")
+            }
+        }
+        warnStatSb.append(getLimitText(chat.warnLimit))
+        return warnStatSb.toString()
+    }
+
+    private fun getStatWarnByUser(chat: Chat, repliedMessage: Message): String {
+        val statUser = repliedMessage.from
+        val user = userService.createOrGetUser(statUser.id.toString(), statUser.writableName(), chat)
+        val warns = userService.getWarnsByUser(user)
+        if (warns.isEmpty()) {
+            return "У @${statUser.writableName()} нет варнов."
+        }
+        val warnStatSb = StringBuilder()
+        warnStatSb.append("Варны @${statUser.writableName()}:\n")
+        warns.sortedBy { warn -> warn.dateCreated }.forEach { warn ->
+            warnStatSb.append("${warnTimeFormatter.format(warn.dateCreated?.toLocalDateTime())} от ${warn.authorUsername}.\n")
+        }
+        warnStatSb.append("Всего варнов: ${warns.size}.\n")
+        warnStatSb.append(getLimitText(chat.warnLimit))
+        return warnStatSb.toString()
     }
 
     fun status(update: Update): CommandResult {

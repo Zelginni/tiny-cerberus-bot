@@ -8,6 +8,16 @@ enum class BotCommand(val requireAdmin: Boolean = true) {
             return commandService.warn(update)
         }
     },
+    UnWarn {
+        override fun performCommand(commandService: CommandService, update: Update): CommandResult {
+            return commandService.unWarn(update)
+        }
+    },
+    StatWarn {
+        override fun performCommand(commandService: CommandService, update: Update): CommandResult {
+            return commandService.statWarn(update)
+        }
+    },
     Status {
         override fun performCommand(commandService: CommandService, update: Update): CommandResult {
             return commandService.status(update)
