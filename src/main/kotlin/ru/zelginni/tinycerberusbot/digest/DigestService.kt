@@ -18,7 +18,8 @@ class DigestService(
 ) {
     private val format = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
 
-    fun addDigest(chat: Chat, linkToMessage: String, description: String, repliedMessageDate: Int): Digest {
+    fun addDigest(chat: Chat, linkToMessage: String, description: String, repliedMessageDate: Int): Digest? {
+        digestRepository.findByLinkToMessage(linkToMessage) ?: return null
         val newDigest = Digest(chat = chat, linkToMessage = linkToMessage,
                 description = description, createdOn = LocalDateTime.ofInstant(Instant.ofEpochSecond(repliedMessageDate.toLong()), ZoneId.systemDefault()))
         digestRepository.saveAndFlush(newDigest)
@@ -30,6 +31,7 @@ class DigestService(
         if (digest.isNullOrEmpty()) {
             return ""
         }
+        digest.sortedBy { it.createdOn }
         val digestList = StringBuilder()
         for (digestEntry in digest) {
             digestList.append("\n")

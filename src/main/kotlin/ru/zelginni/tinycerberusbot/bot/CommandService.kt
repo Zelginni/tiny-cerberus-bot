@@ -170,6 +170,10 @@ class CommandService(
         }
         val linkToMessage = "https://t.me/c/${getChatIdForLink(chat.telegramId)}/${repliedMessage.messageId}"
         digestService.addDigest(chat, linkToMessage, getDescription(update), repliedMessage.date)
+                ?: return CommandResult(
+                CommandStatus.Error,
+                "Это сообщение уже добавили в дайджест. Вы опоздали :("
+        )
         return CommandResult(
                 CommandStatus.Success, "Добавлено."
         )
