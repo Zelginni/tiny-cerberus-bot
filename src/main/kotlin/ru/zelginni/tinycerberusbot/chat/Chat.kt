@@ -20,5 +20,7 @@ data class Chat(
     @Column(name = "bayan_enabled")
     var bayanEnabled: Boolean? = false,
     @Column(name = "digest_enabled")
-    var digestEnabled: Boolean? = false
+    var digestEnabled: Boolean? = false,
+    @Column(name = "rules_enabled")
+    var rulesEnabled: Boolean? = false,
 )
