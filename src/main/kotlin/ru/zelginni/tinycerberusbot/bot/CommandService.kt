@@ -287,7 +287,6 @@ class CommandService(
                 || update.message.hasAnimation()
                 || update.message.hasAudio()
                 || update.message.hasContact()
-                || update.message.hasEntities()
                 || update.message.hasInvoice()
                 || update.message.hasLocation()
                 || update.message.hasPassportData()
