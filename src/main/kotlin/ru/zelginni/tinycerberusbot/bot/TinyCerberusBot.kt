@@ -225,6 +225,9 @@ class TinyCerberusBot(
         if (newChatMembers.isEmpty()) {
             return
         }
+        if (checkNewChatMembersForBots(newChatMembers)) {
+            return
+        }
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
         if (chat != null) {
             if (chat.rulesEnabled == false) {
@@ -236,5 +239,14 @@ class TinyCerberusBot(
                 update,
                 "Привет, $names!\n\nОзнакомься с правилами чата:\n${chat?.let { rulesService.getRules(it) }}"
         )
+    }
+
+    private fun checkNewChatMembersForBots(newChatMembers: List<User>): Boolean {
+        for (chatMember in newChatMembers) {
+            if (chatMember.isBot) {
+                return true
+            }
+        }
+        return false
     }
 }
