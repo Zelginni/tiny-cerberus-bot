@@ -1,11 +1,13 @@
 package ru.zelginni.tinycerberusbot.bot
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.zelginni.tinycerberusbot.chat.Chat
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
+import ru.zelginni.tinycerberusbot.rules.RulesService
 import ru.zelginni.tinycerberusbot.user.UserService
 import ru.zelginni.tinycerberusbot.warn.Warn
 import java.time.format.DateTimeFormatter
@@ -16,7 +18,8 @@ import org.telegram.telegrambots.meta.api.objects.User as TelegramUser
 class CommandService(
     private val chatService: ChatService,
     private val userService: UserService,
-    private val digestService: DigestService
+    private val digestService: DigestService,
+    private val rulesService: RulesService
 ) {
 
     private val warnTimeFormatter = DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy")
@@ -206,5 +209,113 @@ class CommandService(
 
     private fun getChatIdForLink(telegramId: String?): String? {
         return telegramId?.substring(4)
+    }
+
+    fun addRules(update: Update): CommandResult {
+        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+        if (chat == null || chat.rulesEnabled == false) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Аид запретил мне оперировать правилами в этом чате."
+            )
+        }
+        if (!makeSureTheresOnlyTextInRules(update)) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Правила не могут быть без текста или содержать в себе что-либо, кроме текста."
+            )
+        }
+        if (update.message.text.length > 3000) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Объем правил не может превышать 3000 символов."
+            )
+        }
+        val text = getTextForRules(update)
+        if (text.isNullOrBlank()) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Правила не могут быть без текста."
+            )
+        }
+        rulesService.addRules(chat, text)
+        return CommandResult(
+                CommandStatus.Success,
+                "Правила чата обновлены."
+        )
+    }
+
+    private fun getTextForRules(update: Update): String? {
+        val text = update.message.text
+        val beginOfDescriptionIndex = text.indexOf(' ')
+        return if(beginOfDescriptionIndex == -1
+                || beginOfDescriptionIndex == text.length) {
+            null
+        } else {
+            text.substring(beginOfDescriptionIndex + 1)
+        }
+    }
+
+    @Transactional
+    fun removeRules(update: Update): CommandResult {
+        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+        if (chat == null || chat.rulesEnabled == false) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Аид запретил мне оперировать правилами в этом чате."
+            )
+        }
+        return if (rulesService.getRules(chat) == null) {
+            CommandResult(
+                    CommandStatus.Error,
+                    "В этом чате уже отсутствуют правила."
+            )
+        } else {
+            rulesService.removeRules(chat)
+            CommandResult(
+                    CommandStatus.Success,
+                    "Правила чата успешно удалены. Анархия, ня ^_^"
+            )
+        }
+    }
+
+    fun getRules(update: Update): CommandResult {
+        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+        if (chat == null || chat.rulesEnabled == false) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Аид запретил мне оперировать правилами в этом чате."
+            )
+        }
+        val rules = rulesService.getRules(chat)
+                ?: return CommandResult(
+                        CommandStatus.Error,
+                        "В этом чате отсутствуют правила."
+                )
+        return CommandResult(
+                CommandStatus.Success,
+                "Правила чата:\n\n${rules.ruleset}"
+        )
+    }
+
+    private fun makeSureTheresOnlyTextInRules(update: Update): Boolean {
+        return update.message.hasText()
+                && !(update.message.hasDocument()
+                || update.message.hasPhoto()
+                || update.message.hasDice()
+                || update.message.hasPoll()
+                || update.message.hasAnimation()
+                || update.message.hasAudio()
+                || update.message.hasContact()
+                || update.message.hasInvoice()
+                || update.message.hasLocation()
+                || update.message.hasPassportData()
+                || update.message.hasReplyMarkup()
+                || update.message.hasSticker()
+                || update.message.hasSuccessfulPayment()
+                || update.message.hasViaBot()
+                || update.message.hasVideo()
+                || update.message.hasVideoNote()
+                || update.message.hasVoice())
     }
 }

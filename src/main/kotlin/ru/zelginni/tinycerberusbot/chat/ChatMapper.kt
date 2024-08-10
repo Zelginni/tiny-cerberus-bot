@@ -11,5 +11,6 @@ fun Chat.toViewModel(): ChatViewDto
     enabled = enabled,
     warnLimit = warnLimit,
     bayanEnabled = bayanEnabled,
-    digestEnabled = digestEnabled
+    digestEnabled = digestEnabled,
+    rulesEnabled = rulesEnabled
 )

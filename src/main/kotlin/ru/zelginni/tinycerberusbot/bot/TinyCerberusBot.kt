@@ -24,6 +24,7 @@ import ru.zelginni.tinycerberusbot.bayan.BayanService
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.chat.ChatViewDto
+import ru.zelginni.tinycerberusbot.rules.RulesService
 import java.io.Serializable
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -35,7 +36,8 @@ class TinyCerberusBot(
     private val commandService: CommandService,
     private val bayanService: BayanService,
     private val chatService: ChatService,
-    private val digestService: DigestService
+    private val digestService: DigestService,
+    private val rulesService: RulesService
 ): TelegramLongPollingBot() {
 
     private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
@@ -70,6 +72,7 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
+        processWelcomeMessage(update)
         if (!update.hasMessage()
             || !update.message.hasText()) {
             return
@@ -215,5 +218,40 @@ class TinyCerberusBot(
             logger.error("Problem to perform $action", e)
             null
         }
+    }
+
+    private fun processWelcomeMessage(update: Update) {
+        val newChatMembers = update.message.newChatMembers
+        if (newChatMembers.isEmpty()) {
+            return
+        }
+        if (!doesNewMembersNeedGreeting(newChatMembers)) {
+            return
+        }
+        val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
+        if (chat != null) {
+            if (chat.rulesEnabled == false) {
+                return
+            }
+        }
+        val ruleSet = chat?.let { rulesService.getRules(it)?.ruleset }
+        val rules = if (ruleSet == null)
+                    "Правил у нас пока нет, располагайся."
+                else
+                    "Ознакомься с правилами чата:\n$ruleSet"
+        val names = newChatMembers.joinToString(" ") { "@${it.userName}" }
+        sendSimpleReplyText(
+                update,
+                "Привет, $names!\n\n$rules"
+        )
+    }
+
+    private fun doesNewMembersNeedGreeting(newChatMembers: List<User>): Boolean {
+        for (chatMember in newChatMembers) {
+            if (chatMember.isBot) {
+                return false
+            }
+        }
+        return true
     }
 }

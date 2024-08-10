@@ -27,6 +27,21 @@ enum class BotCommand(val requireAdmin: Boolean = true) {
         override fun performCommand(commandService: CommandService, update: Update): CommandResult {
             return commandService.digest(update)
         }
+    },
+    AddRules {
+        override fun performCommand(commandService: CommandService, update: Update): CommandResult {
+            return commandService.addRules(update)
+        }
+    },
+    RemoveRules {
+        override fun performCommand(commandService: CommandService, update: Update): CommandResult {
+            return commandService.removeRules(update)
+        }
+    },
+    GetRules(requireAdmin = false) {
+        override fun performCommand(commandService: CommandService, update: Update): CommandResult {
+            return commandService.getRules(update)
+        }
     };
 
     abstract fun performCommand(commandService: CommandService, update: Update): CommandResult
