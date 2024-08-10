@@ -225,7 +225,7 @@ class CommandService(
                     "Правила не могут быть без текста или содержать в себе что-либо, кроме текста."
             )
         }
-        if (update.message.toString().length > 3000) {
+        if (update.message.text.length > 3000) {
             return CommandResult(
                     CommandStatus.Error,
                     "Объем правил не может превышать 3000 символов."
