@@ -1,6 +1,7 @@
 package ru.zelginni.tinycerberusbot.bot
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.zelginni.tinycerberusbot.chat.Chat
@@ -230,13 +231,32 @@ class CommandService(
                     "Объем правил не может превышать 3000 символов."
             )
         }
-        rulesService.addRules(chat, getDescription(update))
+        val text = getTextForRules(update)
+        if (text.isNullOrBlank()) {
+            return CommandResult(
+                    CommandStatus.Error,
+                    "Правила не могут быть без текста."
+            )
+        }
+        rulesService.addRules(chat, text)
         return CommandResult(
                 CommandStatus.Success,
                 "Правила чата обновлены."
         )
     }
 
+    private fun getTextForRules(update: Update): String? {
+        val text = update.message.text
+        val beginOfDescriptionIndex = text.indexOf(' ')
+        return if(beginOfDescriptionIndex == -1
+                || beginOfDescriptionIndex == text.length) {
+            null
+        } else {
+            text.substring(beginOfDescriptionIndex + 1)
+        }
+    }
+
+    @Transactional
     fun removeRules(update: Update): CommandResult {
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
         if (chat == null || chat.rulesEnabled == false) {
@@ -245,14 +265,14 @@ class CommandService(
                     "Аид запретил мне оперировать правилами в этом чате."
             )
         }
-        if (rulesService.getRules(chat) == null) {
-            return CommandResult(
+        return if (rulesService.getRules(chat) == null) {
+            CommandResult(
                     CommandStatus.Error,
                     "В этом чате уже отсутствуют правила."
             )
         } else {
             rulesService.removeRules(chat)
-            return CommandResult(
+            CommandResult(
                     CommandStatus.Success,
                     "Правила чата успешно удалены. Анархия, ня ^_^"
             )
@@ -274,7 +294,7 @@ class CommandService(
                 )
         return CommandResult(
                 CommandStatus.Success,
-                "Правила чата:\n\n ${rules.ruleset}"
+                "Правила чата:\n\n${rules.ruleset}"
         )
     }
 

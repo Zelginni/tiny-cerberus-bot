@@ -72,13 +72,13 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
+        processWelcomeMessage(update)
         if (!update.hasMessage()
             || !update.message.hasText()) {
             return
         }
         processBayan(update)
         processCommand(update)
-        processWelcomeMessage(update)
     }
 
     private fun processBayan(update: Update) {
@@ -225,7 +225,7 @@ class TinyCerberusBot(
         if (newChatMembers.isEmpty()) {
             return
         }
-        if (checkNewChatMembersForBots(newChatMembers)) {
+        if (!doesNewMembersNeedGreeting(newChatMembers)) {
             return
         }
         val chat = chatService.getEnabledChatByTelegramId(update.message.chatId.toString())
@@ -234,19 +234,24 @@ class TinyCerberusBot(
                 return
             }
         }
+        val ruleSet = chat?.let { rulesService.getRules(it)?.ruleset }
+        val rules = if (ruleSet == null)
+                    "Правил у нас пока нет, располагайся."
+                else
+                    "Ознакомься с правилами чата:\n$ruleSet"
         val names = newChatMembers.joinToString(" ") { "@${it.userName}" }
         sendSimpleReplyText(
                 update,
-                "Привет, $names!\n\nОзнакомься с правилами чата:\n${chat?.let { rulesService.getRules(it) }}"
+                "Привет, $names!\n\n$rules"
         )
     }
 
-    private fun checkNewChatMembersForBots(newChatMembers: List<User>): Boolean {
+    private fun doesNewMembersNeedGreeting(newChatMembers: List<User>): Boolean {
         for (chatMember in newChatMembers) {
             if (chatMember.isBot) {
-                return true
+                return false
             }
         }
-        return false
+        return true
     }
 }

@@ -13,7 +13,8 @@ data class ChatViewDto(
     var enabled: Boolean? = null,
     var warnLimit: Int? = null,
     var bayanEnabled: Boolean? = null,
-    var digestEnabled: Boolean? = null
+    var digestEnabled: Boolean? = null,
+    var rulesEnabled: Boolean? = null
 )
 
 data class AllChatResponse(
