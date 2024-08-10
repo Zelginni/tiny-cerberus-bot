@@ -221,6 +221,9 @@ class TinyCerberusBot(
     }
 
     private fun processWelcomeMessage(update: Update) {
+        if (!update.hasMessage()) {
+            return
+        }
         val newChatMembers = update.message.newChatMembers
         if (newChatMembers.isEmpty()) {
             return
