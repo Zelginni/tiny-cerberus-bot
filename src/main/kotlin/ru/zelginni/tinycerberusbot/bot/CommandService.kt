@@ -2,8 +2,8 @@ package ru.zelginni.tinycerberusbot.bot
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.telegram.telegrambots.meta.api.objects.Message
 import org.telegram.telegrambots.meta.api.objects.Update
+import org.telegram.telegrambots.meta.api.objects.message.Message
 import ru.zelginni.tinycerberusbot.chat.Chat
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService

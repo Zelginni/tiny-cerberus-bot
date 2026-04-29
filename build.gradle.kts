@@ -9,8 +9,7 @@ plugins {
 }
 
 group = "ru.zelginni"
-version = "1.0.7"
-java.sourceCompatibility = JavaVersion.VERSION_11
+version = "1.1.0"
 
 repositories {
 	mavenCentral()
@@ -28,7 +27,8 @@ dependencies {
 
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.12")
 
-	implementation("org.telegram:telegrambots:6.1.0")
+	implementation("org.telegram:telegrambots-springboot-longpolling-starter:9.4.0")
+	implementation("org.telegram:telegrambots-client:9.4.0")
 	implementation("org.apache.commons:commons-collections4:4.4")
 
 	implementation("org.flywaydb:flyway-core")
