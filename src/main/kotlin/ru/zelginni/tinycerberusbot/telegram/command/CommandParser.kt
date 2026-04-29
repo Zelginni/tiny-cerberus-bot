@@ -7,12 +7,12 @@ import ru.zelginni.tinycerberusbot.telegram.IncomingChatMessage
 class CommandParser {
     fun parse(message: IncomingChatMessage): ChatCommand? {
         val text = message.text?.trim().orEmpty()
-        if (!text.startsWith("/")) {
+        if (!text.startsWith("/") && !text.startsWith("!")) {
             return null
         }
 
         val parts = text.split(Regex("\\s+"), limit = 2)
-        val command = parts.first().substringAfter("/").substringBefore("@").lowercase()
+        val command = parts.first().drop(1).substringBefore("@").lowercase()
         val arguments = parts.getOrNull(1)?.takeIf { it.isNotBlank() }
 
         return ChatCommand(

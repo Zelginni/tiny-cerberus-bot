@@ -20,7 +20,6 @@ class DefaultTelegramUpdateHandler(
     }
 
     override fun handleMessage(message: IncomingChatMessage) {
-
         if (administrationService.currentState() != BotState.ENABLED) {
             return
         }
