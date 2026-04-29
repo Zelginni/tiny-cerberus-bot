@@ -18,8 +18,14 @@ class CommandParser {
         return ChatCommand(
             chatId = message.chatId,
             userId = message.userId,
+            messageId = message.messageId,
             command = command,
             arguments = arguments,
+            sentAt = message.sentAt,
+            senderDisplayName = message.senderDisplayName,
+            senderUsername = message.senderUsername,
+            replyTo = message.replyTo,
+            hasOnlyText = message.hasOnlyText,
         )
     }
 }

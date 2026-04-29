@@ -1,6 +1,7 @@
 package ru.zelginni.tinycerberusbot.rules
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import ru.zelginni.tinycerberusbot.chat.Chat
 
 @Service
@@ -15,6 +16,7 @@ class RulesService(
         rulesRepository.saveAndFlush(rules)
     }
 
+    @Transactional
     fun removeRules(chat: Chat) {
         rulesRepository.deleteByChatId(
                 chat.id ?: throw IllegalStateException("How does chat not have its id?!"))

@@ -1,51 +1,33 @@
 package ru.zelginni.tinycerberusbot.bot
 
-import org.apache.commons.collections4.map.PassiveExpiringMap
-import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
-import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
-import org.telegram.telegrambots.meta.api.objects.chat.Chat
-import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
+import org.telegram.telegrambots.meta.api.objects.message.Message
 import ru.zelginni.tinycerberusbot.bayan.Bayan
 import ru.zelginni.tinycerberusbot.bayan.BayanService
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.chat.ChatViewDto
 import ru.zelginni.tinycerberusbot.rules.RulesService
+import ru.zelginni.tinycerberusbot.telegram.IncomingChatMessage
+import ru.zelginni.tinycerberusbot.telegram.TelegramUpdateHandler
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
-import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.collections.HashMap
+import java.time.Instant
 
 @Component
 class TinyCerberusBot(
     private val telegramCommandSender: TelegramCommandSender,
+    private val telegramUpdateHandler: TelegramUpdateHandler,
     private val botProperties: TelegramBotProperties,
-    private val commandService: CommandService,
     private val bayanService: BayanService,
     private val chatService: ChatService,
     private val digestService: DigestService,
     private val rulesService: RulesService
-): SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
+) {
 
-    private val logger = LoggerFactory.getLogger(TinyCerberusBot::class.java)
-    private val adminListCacheSeconds: Long = 600
-
-    private val recentlyRequestedAdmins =
-        Collections.synchronizedMap(PassiveExpiringMap(
-            PassiveExpiringMap.ConstantTimeToLiveExpirationPolicy(
-                adminListCacheSeconds, TimeUnit.SECONDS),
-            HashMap<Long, List<ChatMember>>()))
-
-    override fun getBotToken(): String = botProperties.token
-
-    override fun getUpdatesConsumer() = this
-
-    override fun consume(update: Update?) {
+    fun consume(update: Update?) {
         if (update == null) {
             return
         }
@@ -75,41 +57,7 @@ class TinyCerberusBot(
     }
 
     private fun processCommand(update: Update) {
-        if ((!update.message.isCommand || !update.message.text.contains(botProperties.name))
-            && !update.message.text.startsWith(ALT_COMMAND_START)
-        ) {
-            return
-        }
-        val command = getCommand(update.message.text)
-        if (command == null) {
-            sendSimpleReplyText(update, "Я не понимаю :(")
-            return
-        }
-        if (command.requireAdmin && !isAdmin(update.message.from, update.message.chat)) {
-            return
-        }
-
-        if (command == BotCommand.Warn
-            && update.message.replyToMessage != null
-            && isAdmin(update.message.replyToMessage.from, update.message.chat)) {
-            sendSimpleReplyText(update, "Админов я кусать не буду.")
-            return
-        }
-
-        val commandResult = try {
-            command.performCommand(commandService, update)
-        } catch (e: Exception) {
-            logger.error("Command not performed: $command", e)
-            CommandResult(CommandStatus.Error, "Не получилось :(", ResultAction.Print)
-        }
-        logger.info("Command $command, result $commandResult")
-        if (commandResult.message != null) {
-            sendSimpleReplyText(update, commandResult.message)
-        }
-        when(commandResult.resultAction) {
-            ResultAction.Ban -> banMember(update)
-            ResultAction.Print -> {}
-        }
+        telegramUpdateHandler.handleMessage(update.message.toIncomingChatMessage())
     }
 
     @Scheduled(cron = "\${bot.digest.cron}")
@@ -151,24 +99,6 @@ class TinyCerberusBot(
         telegramCommandSender.sendReplyMessage(update.message.chatId, update.message.messageId, messageText)
     }
 
-    private fun banMember(update: Update) {
-        telegramCommandSender.banChatMember(update.message.chatId, update.message.replyToMessage.from.id)
-    }
-
-    private fun isAdmin(user: User, chat: Chat): Boolean {
-        return getAdminList(chat).any { it.user.id == user.id }
-    }
-
-    private fun getAdminList(chat: Chat): List<ChatMember> {
-        return recentlyRequestedAdmins.computeIfAbsent(chat.id) {
-            requestAdminList(it)
-        }
-    }
-
-    private fun requestAdminList(chatId: Long): List<ChatMember> {
-        return telegramCommandSender.getChatAdministrators(chatId)
-    }
-
     private fun processWelcomeMessage(update: Update) {
         if (!update.hasMessage()) {
             return
@@ -206,4 +136,46 @@ class TinyCerberusBot(
         }
         return true
     }
+
+    private fun Message.toIncomingChatMessage(): IncomingChatMessage =
+        IncomingChatMessage(
+            chatId = chatId,
+            userId = from.id,
+            messageId = messageId,
+            text = text,
+            sentAt = Instant.ofEpochSecond(date.toLong()),
+            senderDisplayName = from.writableName(),
+            senderUsername = from.userName,
+            senderIsBot = from.isBot,
+            replyTo = replyToMessage?.toIncomingChatMessage(),
+            hasText = hasText(),
+            hasPhoto = hasPhoto(),
+            hasDocument = hasDocument(),
+            hasOnlyText = hasOnlyText(),
+        )
+
+    private fun Message.hasOnlyText(): Boolean =
+        hasText()
+            && !(hasDocument()
+            || hasPhoto()
+            || hasDice()
+            || hasPoll()
+            || hasAnimation()
+            || hasAudio()
+            || hasContact()
+            || hasInvoice()
+            || hasLocation()
+            || hasPassportData()
+            || hasReplyMarkup()
+            || hasSticker()
+            || hasSuccessfulPayment()
+            || hasViaBot()
+            || hasVideo()
+            || hasVideoNote()
+            || hasVoice())
+
+    private fun User.writableName(): String =
+        userName ?: "$firstName ${lastName ?: ""}".trim()
 }
+
+private const val ALT_COMMAND_START = "!"
