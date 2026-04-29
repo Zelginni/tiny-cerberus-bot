@@ -6,14 +6,14 @@ import ru.zelginni.tinycerberusbot.bot.BotAdministrationService
 import ru.zelginni.tinycerberusbot.bot.BotState
 import ru.zelginni.tinycerberusbot.telegram.command.CommandHandler
 import ru.zelginni.tinycerberusbot.telegram.command.CommandParser
-import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramMessageSender
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 
 @Component
 class DefaultTelegramUpdateHandler(
     private val administrationService: BotAdministrationService,
     private val commandParser: CommandParser,
     private val commandHandlers: List<CommandHandler>,
-    private val messageSender: TelegramMessageSender,
+    private val messageSender: TelegramCommandSender,
 ) : TelegramUpdateHandler {
     override fun handleNewChatMembers(members: IncomingChatMembers) {
 

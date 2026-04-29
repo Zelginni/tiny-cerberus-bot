@@ -6,35 +6,24 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer
-import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod
-import org.telegram.telegrambots.meta.api.methods.groupadministration.BanChatMember
-import org.telegram.telegrambots.meta.api.methods.groupadministration.GetChatAdministrators
-import org.telegram.telegrambots.meta.api.methods.pinnedmessages.PinChatMessage
-import org.telegram.telegrambots.meta.api.methods.pinnedmessages.UnpinChatMessage
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chat.Chat
 import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMember
-import org.telegram.telegrambots.meta.api.objects.message.Message
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException
-import org.telegram.telegrambots.meta.generics.TelegramClient
 import ru.zelginni.tinycerberusbot.bayan.Bayan
 import ru.zelginni.tinycerberusbot.bayan.BayanService
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.chat.ChatViewDto
 import ru.zelginni.tinycerberusbot.rules.RulesService
-import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramMessageSender
-import java.io.Serializable
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
 
 @Component
 class TinyCerberusBot(
-    private val telegramClient: TelegramClient,
-    private val telegramMessageSender: TelegramMessageSender,
+    private val telegramCommandSender: TelegramCommandSender,
     private val botProperties: TelegramBotProperties,
     private val commandService: CommandService,
     private val bayanService: BayanService,
@@ -139,36 +128,31 @@ class TinyCerberusBot(
         val chatId = chat.telegramId ?: return
         val digest = digestService.compileDigest(chat.id ?: -1) ?: return
         if (digest.isBlank()) {
-            telegramMessageSender.sendMessage(chatId.toLong(), "За прошедшие сутки в дайджест ничего не добавили.")
+            telegramCommandSender.sendMessage(chatId.toLong(), "За прошедшие сутки в дайджест ничего не добавили.")
             return
         }
-        val message = perform(SendMessage(chatId, digest).apply {
-            text = digest
-            disableNotification = true
-        }) ?: return
-        perform(PinChatMessage(message.chatId.toString(), message.messageId, true, null))
-        digestService.addPinnedDigest(chatId, message.messageId)
+        val message = telegramCommandSender.sendSilentMessage(chatId, digest) ?: return
+        val messageId = message.messageId ?: return
+        telegramCommandSender.pinMessage(message.chatId.toString(), messageId, true)
+        digestService.addPinnedDigest(chatId, messageId)
         digestService.deleteDigest(chatId)
     }
 
     private fun cleanDigestPins() {
-        digestService.fetchOutdatedDigests()?.filter { it.chat?.telegramId != null }?.forEach {
-            perform(UnpinChatMessage(it.chat?.telegramId ?: "", it.pinnedMessageId, null))
+        digestService.fetchOutdatedDigests()
+            ?.filter { it.chat?.telegramId != null && it.pinnedMessageId != null }
+            ?.forEach {
+                telegramCommandSender.unpinMessage(it.chat?.telegramId ?: "", it.pinnedMessageId ?: return@forEach)
         }
         digestService.deletePinnedDigests()
     }
 
     private fun sendSimpleReplyText(update: Update, messageText: String) {
-        val message = SendMessage(update.message.chatId.toString(), messageText).apply {
-            replyToMessageId = update.message.messageId
-            enableHtml(true)
-        }
-        perform(message)
+        telegramCommandSender.sendReplyMessage(update.message.chatId, update.message.messageId, messageText)
     }
 
     private fun banMember(update: Update) {
-        val ban = BanChatMember(update.message.chatId.toString(), update.message.replyToMessage.from.id)
-        perform(ban)
+        telegramCommandSender.banChatMember(update.message.chatId, update.message.replyToMessage.from.id)
     }
 
     private fun isAdmin(user: User, chat: Chat): Boolean {
@@ -182,25 +166,7 @@ class TinyCerberusBot(
     }
 
     private fun requestAdminList(chatId: Long): List<ChatMember> {
-        return perform(GetChatAdministrators(chatId.toString())) ?: listOf()
-    }
-
-    private fun <T: Serializable> perform(action: BotApiMethod<T>): T? {
-        return try {
-            telegramClient.execute(action)
-        } catch (e: TelegramApiException) {
-            logger.error("Problem to perform $action", e)
-            null
-        }
-    }
-
-    private fun perform(action: SendMessage): Message? {
-        return try {
-            telegramClient.execute(action)
-        } catch (e: TelegramApiException) {
-            logger.error("Problem to perform $action", e)
-            null
-        }
+        return telegramCommandSender.getChatAdministrators(chatId)
     }
 
     private fun processWelcomeMessage(update: Update) {
