@@ -46,7 +46,9 @@ class TinyCerberusBot(
         )
 
     private fun User.writableName(): String =
-        userName ?: "$firstName ${lastName ?: ""}".trim()
+        listOfNotNull(firstName, lastName)
+            .joinToString(" ")
+            .ifBlank { userName ?: id.toString() }
 
     private fun Message.toIncomingChatMembers(): IncomingChatMembers =
         IncomingChatMembers(
