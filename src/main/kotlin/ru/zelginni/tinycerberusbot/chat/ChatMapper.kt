@@ -1,7 +1,7 @@
 package ru.zelginni.tinycerberusbot.chat
 
 fun ChatInsertDto.toDbModel(): Chat
-    = Chat(telegramId = telegramId, name = name, warnLimit = warnLimit)
+    = Chat(telegramId = telegramId, name = name, warnLimit = warnLimit, fullStatisticsLimit = fullStatisticsLimit)
 
 fun Chat.toViewModel(): ChatViewDto
     = ChatViewDto(
@@ -12,5 +12,7 @@ fun Chat.toViewModel(): ChatViewDto
     warnLimit = warnLimit,
     bayanEnabled = bayanEnabled,
     digestEnabled = digestEnabled,
-    rulesEnabled = rulesEnabled
+    rulesEnabled = rulesEnabled,
+    statisticsEnabled = statisticsEnabled,
+    fullStatisticsLimit = fullStatisticsLimit,
 )

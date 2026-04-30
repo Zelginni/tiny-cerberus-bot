@@ -9,8 +9,7 @@ plugins {
 }
 
 group = "ru.zelginni"
-version = "1.0.7"
-java.sourceCompatibility = JavaVersion.VERSION_11
+version = "1.1.0"
 
 repositories {
 	mavenCentral()
@@ -19,6 +18,7 @@ repositories {
 dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -28,7 +28,8 @@ dependencies {
 
 	implementation("org.springdoc:springdoc-openapi-ui:1.6.12")
 
-	implementation("org.telegram:telegrambots:6.1.0")
+	implementation("org.telegram:telegrambots-springboot-longpolling-starter:9.4.0")
+	implementation("org.telegram:telegrambots-client:9.4.0")
 	implementation("org.apache.commons:commons-collections4:4.4")
 
 	implementation("org.flywaydb:flyway-core")

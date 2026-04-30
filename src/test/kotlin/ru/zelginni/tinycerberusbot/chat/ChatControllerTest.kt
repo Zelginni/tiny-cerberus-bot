@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.data.domain.Example
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
@@ -14,6 +13,8 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import ru.zelginni.tinycerberusbot.bot.BotState
+import ru.zelginni.tinycerberusbot.bot.SetBotStateRequest
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,15 +35,21 @@ class ChatControllerTest {
         val chatName = "Web test chat"
         val telegramId = "-12321"
         mockMvc.post("/admin/chat") {
-            content = objectMapper.writeValueAsString(ChatInsertDto(chatName, telegramId))
+            content = objectMapper.writeValueAsString(
+                ChatInsertDto(
+                    name = chatName,
+                    telegramId = telegramId,
+                    fullStatisticsLimit = 10,
+                )
+            )
             contentType = MediaType.APPLICATION_JSON
         }
             .andDo { print() }
             .andExpect { status().isOk }
 
-        val example = Chat(name = chatName, telegramId = telegramId)
-        val result = chatRepository.findOne(Example.of(example))
-        assertEquals(true, result.isPresent)
+        val result = chatRepository.findByTelegramId(telegramId)
+        assertEquals(chatName, result?.name)
+        assertEquals(10, result?.fullStatisticsLimit)
     }
 
     @Test
@@ -55,7 +62,7 @@ class ChatControllerTest {
         mockMvc.get("/admin/chat/all")
             .andDo { print() }
             .andExpect { status().isOk }
-            .andExpect { jsonPath("$.chats[0].name") {value(chatName)} }
+            .andExpect { jsonPath("$.chats[?(@.telegramId == '$telegramId')].name") { value(chatName) } }
     }
 
     @Test
@@ -88,5 +95,65 @@ class ChatControllerTest {
 
         val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
         assertEquals(true, modifiedChat.enabled)
+    }
+
+    @Test
+    @WithMockUser
+    fun changeWarnLimit() {
+        val chatName = "Web test chat 5"
+        val telegramId = "-555555555"
+        val chat = Chat(name = chatName, telegramId = telegramId, warnLimit = 3)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/warn-limit?telegramId=$telegramId&warnLimit=5")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(5, modifiedChat.warnLimit)
+    }
+
+    @Test
+    @WithMockUser
+    fun changeFullStatisticsLimit() {
+        val chatName = "Web test chat 6"
+        val telegramId = "-666666666"
+        val chat = Chat(name = chatName, telegramId = telegramId, fullStatisticsLimit = 3)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/full-statistics-limit?telegramId=$telegramId&fullStatisticsLimit=15")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(15, modifiedChat.fullStatisticsLimit)
+    }
+
+    @Test
+    @WithMockUser
+    fun enableStatisticsFeature() {
+        val chatName = "Web test chat 7"
+        val telegramId = "-777777777"
+        val chat = Chat(name = chatName, telegramId = telegramId, statisticsEnabled = false)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/enable/STATISTICS?telegramId=$telegramId")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(true, modifiedChat.statisticsEnabled)
+    }
+
+    @Test
+    @WithMockUser
+    fun setBotState() {
+        mockMvc.put("/admin/bot/state") {
+            content = objectMapper.writeValueAsString(SetBotStateRequest(BotState.ENABLED))
+            contentType = MediaType.APPLICATION_JSON
+        }
+            .andDo { print() }
+            .andExpect { status().isOk }
+            .andExpect { jsonPath("$.state") { value(BotState.ENABLED.name) } }
     }
 }

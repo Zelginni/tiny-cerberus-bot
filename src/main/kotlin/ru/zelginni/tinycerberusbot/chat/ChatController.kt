@@ -88,7 +88,36 @@ class ChatController(
         val chatFeature = getFeature(feature) ?: return ResponseEntity.badRequest().body("No such feature as $feature")
         chatService.disableFeatureInChat(telegramId, chatFeature)
         chatService.cleanCache()
-        return ResponseEntity.ok("$feature in chat $telegramId enabled")
+        return ResponseEntity.ok("$feature in chat $telegramId disabled")
+    }
+
+    @PutMapping("/warn-limit")
+    @Operation(
+        summary = "Change warn limit",
+        description = "Change warn limit for existing chat",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun changeWarnLimit(@RequestParam telegramId: String, @RequestParam warnLimit: Int): ResponseEntity<String> {
+        logger.info("Change warn limit in chat $telegramId to $warnLimit")
+        chatService.changeWarnLimit(telegramId, warnLimit)
+        chatService.cleanCache()
+        return ResponseEntity.ok("Warn limit in chat $telegramId changed to $warnLimit")
+    }
+
+    @PutMapping("/full-statistics-limit")
+    @Operation(
+        summary = "Change full statistics limit",
+        description = "Change full statistics limit for existing chat",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun changeFullStatisticsLimit(
+        @RequestParam telegramId: String,
+        @RequestParam fullStatisticsLimit: Int
+    ): ResponseEntity<String> {
+        logger.info("Change full statistics limit in chat $telegramId to $fullStatisticsLimit")
+        chatService.changeFullStatisticsLimit(telegramId, fullStatisticsLimit)
+        chatService.cleanCache()
+        return ResponseEntity.ok("Full statistics limit in chat $telegramId changed to $fullStatisticsLimit")
     }
 
     @GetMapping("/cache/clean")
