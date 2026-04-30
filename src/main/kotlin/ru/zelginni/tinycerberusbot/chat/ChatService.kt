@@ -35,6 +35,10 @@ class ChatService(
         changeChat(telegramId) {chatFeature.enable(this)}
     }
 
+    fun changeWarnLimit(telegramId: String, warnLimit: Int) {
+        changeChat(telegramId) {this.warnLimit = warnLimit}
+    }
+
     fun getFullStatisticsLimit(chatId: Long): Int =
         getEnabledChatByTelegramId(chatId.toString())?.fullStatisticsLimit
             ?: DEFAULT_FULL_STATISTICS_LIMIT

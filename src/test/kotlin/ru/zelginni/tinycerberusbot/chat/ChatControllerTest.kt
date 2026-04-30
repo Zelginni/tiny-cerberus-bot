@@ -57,7 +57,7 @@ class ChatControllerTest {
         mockMvc.get("/admin/chat/all")
             .andDo { print() }
             .andExpect { status().isOk }
-            .andExpect { jsonPath("$.chats[0].name") {value(chatName)} }
+            .andExpect { jsonPath("$.chats[?(@.telegramId == '$telegramId')].name") { value(chatName) } }
     }
 
     @Test
@@ -90,6 +90,22 @@ class ChatControllerTest {
 
         val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
         assertEquals(true, modifiedChat.enabled)
+    }
+
+    @Test
+    @WithMockUser
+    fun changeWarnLimit() {
+        val chatName = "Web test chat 5"
+        val telegramId = "-555555555"
+        val chat = Chat(name = chatName, telegramId = telegramId, warnLimit = 3)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/warn-limit?telegramId=$telegramId&warnLimit=5")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(5, modifiedChat.warnLimit)
     }
 
     @Test

@@ -91,6 +91,19 @@ class ChatController(
         return ResponseEntity.ok("$feature in chat $telegramId enabled")
     }
 
+    @PutMapping("/warn-limit")
+    @Operation(
+        summary = "Change warn limit",
+        description = "Change warn limit for existing chat",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun changeWarnLimit(@RequestParam telegramId: String, @RequestParam warnLimit: Int): ResponseEntity<String> {
+        logger.info("Change warn limit in chat $telegramId to $warnLimit")
+        chatService.changeWarnLimit(telegramId, warnLimit)
+        chatService.cleanCache()
+        return ResponseEntity.ok("Warn limit in chat $telegramId changed to $warnLimit")
+    }
+
     @GetMapping("/cache/clean")
     @Operation(
         summary = "Clean chat cache",
