@@ -5,6 +5,7 @@ import java.time.Instant
 
 @Entity
 @Table(
+    schema = "cerberus",
     name = "message_statistics",
     uniqueConstraints = [
         UniqueConstraint(

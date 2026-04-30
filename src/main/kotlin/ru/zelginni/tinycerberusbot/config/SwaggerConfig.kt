@@ -20,7 +20,7 @@ class SwaggerConfig {
             .info(
                 Info().title("Tiny Cerberus Bot")
                     .description("Discipline Telegram Chat bot")
-                    .version("v1.0.6")
+                    .version("v1.1.1")
             )
     }
 }
