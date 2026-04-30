@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.data.domain.Example
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
@@ -36,15 +35,21 @@ class ChatControllerTest {
         val chatName = "Web test chat"
         val telegramId = "-12321"
         mockMvc.post("/admin/chat") {
-            content = objectMapper.writeValueAsString(ChatInsertDto(chatName, telegramId))
+            content = objectMapper.writeValueAsString(
+                ChatInsertDto(
+                    name = chatName,
+                    telegramId = telegramId,
+                    fullStatisticsLimit = 10,
+                )
+            )
             contentType = MediaType.APPLICATION_JSON
         }
             .andDo { print() }
             .andExpect { status().isOk }
 
-        val example = Chat(name = chatName, telegramId = telegramId)
-        val result = chatRepository.findOne(Example.of(example))
-        assertEquals(true, result.isPresent)
+        val result = chatRepository.findByTelegramId(telegramId)
+        assertEquals(chatName, result?.name)
+        assertEquals(10, result?.fullStatisticsLimit)
     }
 
     @Test
@@ -106,6 +111,22 @@ class ChatControllerTest {
 
         val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
         assertEquals(5, modifiedChat.warnLimit)
+    }
+
+    @Test
+    @WithMockUser
+    fun changeFullStatisticsLimit() {
+        val chatName = "Web test chat 6"
+        val telegramId = "-666666666"
+        val chat = Chat(name = chatName, telegramId = telegramId, fullStatisticsLimit = 3)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/full-statistics-limit?telegramId=$telegramId&fullStatisticsLimit=15")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(15, modifiedChat.fullStatisticsLimit)
     }
 
     @Test

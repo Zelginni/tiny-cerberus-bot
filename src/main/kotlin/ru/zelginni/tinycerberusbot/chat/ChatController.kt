@@ -104,6 +104,22 @@ class ChatController(
         return ResponseEntity.ok("Warn limit in chat $telegramId changed to $warnLimit")
     }
 
+    @PutMapping("/full-statistics-limit")
+    @Operation(
+        summary = "Change full statistics limit",
+        description = "Change full statistics limit for existing chat",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun changeFullStatisticsLimit(
+        @RequestParam telegramId: String,
+        @RequestParam fullStatisticsLimit: Int
+    ): ResponseEntity<String> {
+        logger.info("Change full statistics limit in chat $telegramId to $fullStatisticsLimit")
+        chatService.changeFullStatisticsLimit(telegramId, fullStatisticsLimit)
+        chatService.cleanCache()
+        return ResponseEntity.ok("Full statistics limit in chat $telegramId changed to $fullStatisticsLimit")
+    }
+
     @GetMapping("/cache/clean")
     @Operation(
         summary = "Clean chat cache",
