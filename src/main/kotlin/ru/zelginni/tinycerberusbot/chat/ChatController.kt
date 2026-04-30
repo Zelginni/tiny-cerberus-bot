@@ -88,7 +88,7 @@ class ChatController(
         val chatFeature = getFeature(feature) ?: return ResponseEntity.badRequest().body("No such feature as $feature")
         chatService.disableFeatureInChat(telegramId, chatFeature)
         chatService.cleanCache()
-        return ResponseEntity.ok("$feature in chat $telegramId enabled")
+        return ResponseEntity.ok("$feature in chat $telegramId disabled")
     }
 
     @PutMapping("/warn-limit")
