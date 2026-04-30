@@ -21,6 +21,7 @@ class DefaultTelegramUpdateHandler(
     private val messageSender: TelegramCommandSender,
 ) : TelegramUpdateHandler {
     override fun handleNewChatMembers(members: IncomingChatMembers) {
+        chatMemberRegistry.rememberMembers(members)
         newChatMembersGreetingService.greet(members)
     }
 
