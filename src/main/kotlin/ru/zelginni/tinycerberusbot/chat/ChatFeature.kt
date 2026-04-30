@@ -1,7 +1,7 @@
 package ru.zelginni.tinycerberusbot.chat
 
-enum class ChatFeature {
-    BAYAN {
+enum class ChatFeature(val displayName: String) {
+    BAYAN("Реакция на баяны") {
         override fun enable(chat: Chat) {
             chat.bayanEnabled = true
         }
@@ -9,8 +9,10 @@ enum class ChatFeature {
         override fun disable(chat: Chat) {
             chat.bayanEnabled = false
         }
+
+        override fun isEnabled(chat: Chat): Boolean = chat.bayanEnabled == true
     },
-    DIGEST {
+    DIGEST("Дайджест") {
         override fun enable(chat: Chat) {
             chat.digestEnabled = true
         }
@@ -18,8 +20,10 @@ enum class ChatFeature {
         override fun disable(chat: Chat) {
             chat.digestEnabled = false
         }
+
+        override fun isEnabled(chat: Chat): Boolean = chat.digestEnabled == true
     },
-    RULES {
+    RULES("Правила чата") {
         override fun enable(chat: Chat) {
             chat.rulesEnabled = true
         }
@@ -27,8 +31,10 @@ enum class ChatFeature {
         override fun disable(chat: Chat) {
             chat.rulesEnabled = false
         }
+
+        override fun isEnabled(chat: Chat): Boolean = chat.rulesEnabled == true
     },
-    STATISTICS {
+    STATISTICS("Статистика") {
         override fun enable(chat: Chat) {
             chat.statisticsEnabled = true
         }
@@ -36,10 +42,13 @@ enum class ChatFeature {
         override fun disable(chat: Chat) {
             chat.statisticsEnabled = false
         }
+
+        override fun isEnabled(chat: Chat): Boolean = chat.statisticsEnabled == true
     };
 
     abstract fun enable(chat: Chat)
     abstract fun disable(chat: Chat)
+    abstract fun isEnabled(chat: Chat): Boolean
 }
 
 fun getFeature(name: String): ChatFeature? = ChatFeature.values().firstOrNull{ it.name.equals(name, true) }
