@@ -24,8 +24,7 @@ class CommandParser {
             sentAt = message.sentAt,
             senderDisplayName = message.senderDisplayName,
             senderUsername = message.senderUsername,
-            replyTo = message.replyTo,
-            hasOnlyText = message.hasOnlyText,
+            replyTo = message.replyTo
         )
     }
 }

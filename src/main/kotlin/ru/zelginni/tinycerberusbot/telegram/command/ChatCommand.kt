@@ -12,6 +12,5 @@ data class ChatCommand(
     val sentAt: Instant,
     val senderDisplayName: String?,
     val senderUsername: String?,
-    val replyTo: IncomingChatMessage?,
-    val hasOnlyText: Boolean,
+    val replyTo: IncomingChatMessage?
 )
