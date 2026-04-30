@@ -4,15 +4,16 @@ import org.springframework.stereotype.Component
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.digest.DigestService
 import ru.zelginni.tinycerberusbot.telegram.IncomingChatMessage
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberService
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 
 @Component
 class DigestCommandHandler(
     telegramCommandSender: TelegramCommandSender,
-    administrationService: TelegramChatAdministrationService,
+    chatMemberService: TelegramChatMemberService,
     private val chatService: ChatService,
     private val digestService: DigestService,
-) : AbstractCommandHandler(telegramCommandSender, administrationService) {
+) : AbstractCommandHandler(telegramCommandSender, chatMemberService) {
 
     override val commandName = "digest"
 

@@ -2,15 +2,16 @@ package ru.zelginni.tinycerberusbot.telegram.command
 
 import org.slf4j.LoggerFactory
 import ru.zelginni.tinycerberusbot.telegram.IncomingChatMessage
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberService
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 
 abstract class AbstractCommandHandler(
     private val telegramCommandSender: TelegramCommandSender,
-    private val administrationService: TelegramChatAdministrationService,
+    private val chatMemberService: TelegramChatMemberService,
 ) : CommandHandler {
 
     final override fun handle(command: ChatCommand) {
-        if (requiresAdmin && !administrationService.isAdmin(command.chatId, command.userId)) {
+        if (requiresAdmin && !chatMemberService.isChatAdministrator(command.chatId, command.userId)) {
             return
         }
 
@@ -33,7 +34,7 @@ abstract class AbstractCommandHandler(
     }
 
     protected fun isAdmin(chatId: Long, userId: Long): Boolean =
-        administrationService.isAdmin(chatId, userId)
+        chatMemberService.isChatAdministrator(chatId, userId)
 
     protected fun IncomingChatMessage.writableName(): String =
         senderUsername ?: senderDisplayName ?: userId.toString()

@@ -23,4 +23,8 @@ data class Chat(
     var digestEnabled: Boolean? = false,
     @Column(name = "rules_enabled")
     var rulesEnabled: Boolean? = false,
+    @Column(nullable = false)
+    var fullStatisticsLimit: Int = DEFAULT_FULL_STATISTICS_LIMIT,
 )
+
+const val DEFAULT_FULL_STATISTICS_LIMIT = -1

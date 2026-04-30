@@ -3,15 +3,16 @@ package ru.zelginni.tinycerberusbot.telegram.command
 import org.springframework.stereotype.Component
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.rules.RulesService
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberService
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 
 @Component
 class RulesCommandHandler(
     telegramCommandSender: TelegramCommandSender,
-    administrationService: TelegramChatAdministrationService,
+    chatMemberService: TelegramChatMemberService,
     private val chatService: ChatService,
     private val rulesService: RulesService,
-) : AbstractCommandHandler(telegramCommandSender, administrationService) {
+) : AbstractCommandHandler(telegramCommandSender, chatMemberService) {
 
     override val commandName = "rules"
 

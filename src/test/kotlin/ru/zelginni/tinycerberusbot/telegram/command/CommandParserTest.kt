@@ -49,6 +49,5 @@ class CommandParserTest {
             senderDisplayName = null,
             senderUsername = null,
             replyTo = null,
-            hasOnlyText = true,
         )
 }

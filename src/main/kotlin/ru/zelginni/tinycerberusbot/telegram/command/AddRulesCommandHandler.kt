@@ -1,17 +1,19 @@
 package ru.zelginni.tinycerberusbot.telegram.command
 
 import org.springframework.stereotype.Component
+import org.telegram.telegrambots.meta.api.objects.message.Message
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.rules.RulesService
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberService
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 
 @Component
 class AddRulesCommandHandler(
     telegramCommandSender: TelegramCommandSender,
-    administrationService: TelegramChatAdministrationService,
+    chatMemberService: TelegramChatMemberService,
     private val chatService: ChatService,
     private val rulesService: RulesService,
-) : AbstractCommandHandler(telegramCommandSender, administrationService) {
+) : AbstractCommandHandler(telegramCommandSender, chatMemberService) {
 
     override val commandName = "addrules"
 
@@ -19,10 +21,6 @@ class AddRulesCommandHandler(
         val chat = chatService.getEnabledChatByTelegramId(command.chatId.toString())
         if (chat == null || chat.rulesEnabled == false) {
             reply(command, "Аид запретил мне оперировать правилами в этом чате.")
-            return
-        }
-        if (!command.hasOnlyText) {
-            reply(command, "Правила не могут быть без текста или содержать в себе что-либо, кроме текста.")
             return
         }
 

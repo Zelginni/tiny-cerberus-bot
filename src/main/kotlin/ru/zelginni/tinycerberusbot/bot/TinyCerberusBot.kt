@@ -12,10 +12,14 @@ import java.time.Instant
 
 @Component
 class TinyCerberusBot(
+    private val administrationService: BotAdministrationService,
     private val telegramUpdateHandler: TelegramUpdateHandler
 ) {
 
     fun consume(update: Update?) {
+        if (administrationService.currentState() != BotState.ENABLED) {
+            return
+        }
         if (update == null) {
             return
         }

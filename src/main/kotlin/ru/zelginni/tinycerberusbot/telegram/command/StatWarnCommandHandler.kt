@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import ru.zelginni.tinycerberusbot.chat.Chat
 import ru.zelginni.tinycerberusbot.chat.ChatService
 import ru.zelginni.tinycerberusbot.telegram.IncomingChatMessage
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberService
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 import ru.zelginni.tinycerberusbot.user.UserService
 import ru.zelginni.tinycerberusbot.warn.Warn
@@ -12,10 +13,10 @@ import java.time.format.DateTimeFormatter
 @Component
 class StatWarnCommandHandler(
     telegramCommandSender: TelegramCommandSender,
-    administrationService: TelegramChatAdministrationService,
+    chatMemberService: TelegramChatMemberService,
     private val chatService: ChatService,
     private val userService: UserService,
-) : AbstractCommandHandler(telegramCommandSender, administrationService) {
+) : AbstractCommandHandler(telegramCommandSender, chatMemberService) {
 
     override val commandName = "statwarn"
 

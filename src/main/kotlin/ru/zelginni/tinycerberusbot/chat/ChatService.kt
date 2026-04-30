@@ -35,6 +35,10 @@ class ChatService(
         changeChat(telegramId) {chatFeature.enable(this)}
     }
 
+    fun getFullStatisticsLimit(chatId: Long): Int =
+        getEnabledChatByTelegramId(chatId.toString())?.fullStatisticsLimit
+            ?: DEFAULT_FULL_STATISTICS_LIMIT
+
     private fun changeChat(telegramId: String, change: Chat.() -> Unit) {
         val chat = chatRepository.findByTelegramId(telegramId)
             ?: throw IllegalArgumentException("Chat with telegram id $telegramId not fount")
