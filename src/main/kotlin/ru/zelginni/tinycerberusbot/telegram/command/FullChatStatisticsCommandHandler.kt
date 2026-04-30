@@ -2,6 +2,7 @@ package ru.zelginni.tinycerberusbot.telegram.command
 
 import org.springframework.stereotype.Component
 import ru.zelginni.tinycerberusbot.statistics.FullChatStatisticsService
+import ru.zelginni.tinycerberusbot.statistics.StatisticsFeatureService
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramApiCommandSender
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberService
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
@@ -10,6 +11,7 @@ import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 class FullChatStatisticsCommandHandler(
     telegramCommandSender: TelegramCommandSender,
     chatMemberService: TelegramChatMemberService,
+    private val statisticsFeatureService: StatisticsFeatureService,
     private val fullChatStatisticsService: FullChatStatisticsService,
     private val messageSender: TelegramApiCommandSender
 ) : AbstractCommandHandler(telegramCommandSender, chatMemberService) {
@@ -17,6 +19,11 @@ class FullChatStatisticsCommandHandler(
     override val commandName: String = "stats"
 
     override fun handleCommand(command: ChatCommand) {
+        if (!statisticsFeatureService.isEnabled(command.chatId)) {
+            messageSender.sendMessage(command.chatId, statisticsFeatureService.disabledMessage())
+            return
+        }
+
         val statistics = fullChatStatisticsService.getLimitedStatistics(command.chatId)
         val text = CommandResponseFormatter.formatNumberedStatistics(
             title = "Статистика участников:",

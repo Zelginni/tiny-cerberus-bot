@@ -131,6 +131,22 @@ class ChatControllerTest {
 
     @Test
     @WithMockUser
+    fun enableStatisticsFeature() {
+        val chatName = "Web test chat 7"
+        val telegramId = "-777777777"
+        val chat = Chat(name = chatName, telegramId = telegramId, statisticsEnabled = false)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/enable/STATISTICS?telegramId=$telegramId")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(true, modifiedChat.statisticsEnabled)
+    }
+
+    @Test
+    @WithMockUser
     fun setBotState() {
         mockMvc.put("/admin/bot/state") {
             content = objectMapper.writeValueAsString(SetBotStateRequest(BotState.ENABLED))

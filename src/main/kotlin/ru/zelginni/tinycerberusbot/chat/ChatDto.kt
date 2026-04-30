@@ -16,6 +16,7 @@ data class ChatViewDto(
     var bayanEnabled: Boolean? = null,
     var digestEnabled: Boolean? = null,
     var rulesEnabled: Boolean? = null,
+    var statisticsEnabled: Boolean? = null,
     var fullStatisticsLimit: Int? = null,
 )
 

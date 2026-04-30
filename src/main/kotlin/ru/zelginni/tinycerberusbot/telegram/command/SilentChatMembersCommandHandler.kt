@@ -1,6 +1,7 @@
 package ru.zelginni.tinycerberusbot.telegram.command
 
 import org.springframework.stereotype.Component
+import ru.zelginni.tinycerberusbot.statistics.StatisticsFeatureService
 import ru.zelginni.tinycerberusbot.statistics.SilentChatMemberService
 import ru.zelginni.tinycerberusbot.statistics.SilentChatMemberService.Companion.DEFAULT_SILENCE_DAYS
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramApiCommandSender
@@ -11,12 +12,18 @@ import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramCommandSender
 class SilentChatMembersCommandHandler(
     telegramCommandSender: TelegramCommandSender,
     chatMemberService: TelegramChatMemberService,
+    private val statisticsFeatureService: StatisticsFeatureService,
     private val silentChatMemberService: SilentChatMemberService,
     private val messageSender: TelegramApiCommandSender,
 ) : AbstractCommandHandler(telegramCommandSender, chatMemberService)  {
     override val commandName = "silent"
 
     override fun handleCommand(command: ChatCommand) {
+        if (!statisticsFeatureService.isEnabled(command.chatId)) {
+            messageSender.sendMessage(command.chatId, statisticsFeatureService.disabledMessage())
+            return
+        }
+
         val days = command.silenceDays()
         val silentMembers = silentChatMemberService.getSilentMembers(command.chatId, days)
 

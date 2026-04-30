@@ -13,5 +13,6 @@ fun Chat.toViewModel(): ChatViewDto
     bayanEnabled = bayanEnabled,
     digestEnabled = digestEnabled,
     rulesEnabled = rulesEnabled,
+    statisticsEnabled = statisticsEnabled,
     fullStatisticsLimit = fullStatisticsLimit,
 )

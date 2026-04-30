@@ -27,6 +27,15 @@ enum class ChatFeature {
         override fun disable(chat: Chat) {
             chat.rulesEnabled = false
         }
+    },
+    STATISTICS {
+        override fun enable(chat: Chat) {
+            chat.statisticsEnabled = true
+        }
+
+        override fun disable(chat: Chat) {
+            chat.statisticsEnabled = false
+        }
     };
 
     abstract fun enable(chat: Chat)

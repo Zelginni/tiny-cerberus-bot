@@ -11,9 +11,15 @@ import java.time.Instant
 @Service
 class MessageStatisticsService(
     private val repository: MessageStatisticRepository,
+    private val statisticsFeatureService: StatisticsFeatureService,
 ) {
     @Transactional
     fun recordMessage(message: IncomingChatMessage) {
+        if (!statisticsFeatureService.isEnabled(message.chatId)) {
+            logger.debug("Skip message statistics recording chatId={} because statistics feature is disabled", message.chatId)
+            return
+        }
+
         val statistic = repository.findByChatIdAndUserId(message.chatId, message.userId)
             ?: MessageStatistic(chatId = message.chatId, userId = message.userId)
 
