@@ -4,7 +4,7 @@ import javax.persistence.*
 import java.time.Instant
 
 @Entity
-@Table(name = "bot_settings")
+@Table(schema = "cerberus", name = "bot_settings")
 class BotSettings(
     @Id
     val id: String = DEFAULT_ID,
