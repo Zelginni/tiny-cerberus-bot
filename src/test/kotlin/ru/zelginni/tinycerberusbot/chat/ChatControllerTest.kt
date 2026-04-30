@@ -14,6 +14,8 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import ru.zelginni.tinycerberusbot.bot.BotState
+import ru.zelginni.tinycerberusbot.bot.SetBotStateRequest
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -88,5 +90,17 @@ class ChatControllerTest {
 
         val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
         assertEquals(true, modifiedChat.enabled)
+    }
+
+    @Test
+    @WithMockUser
+    fun setBotState() {
+        mockMvc.put("/admin/bot/state") {
+            content = objectMapper.writeValueAsString(SetBotStateRequest(BotState.ENABLED))
+            contentType = MediaType.APPLICATION_JSON
+        }
+            .andDo { print() }
+            .andExpect { status().isOk }
+            .andExpect { jsonPath("$.state") { value(BotState.ENABLED.name) } }
     }
 }
