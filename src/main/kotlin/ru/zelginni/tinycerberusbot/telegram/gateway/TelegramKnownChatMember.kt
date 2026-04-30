@@ -5,7 +5,7 @@ import java.io.Serializable
 import java.time.Instant
 
 @Entity
-@Table(name = "telegram_known_chat_members")
+@Table(schema = "cerberus", name = "telegram_known_chat_members")
 class TelegramKnownChatMember(
     @EmbeddedId
     val id: TelegramKnownChatMemberId,
