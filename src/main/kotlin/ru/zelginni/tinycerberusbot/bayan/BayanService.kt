@@ -14,7 +14,7 @@ class BayanService(
 
     fun findResponseForChat(chatId: Long): Bayan? {
         val chat = chatService.getEnabledChatByTelegramId(chatId.toString())
-        logger.debug("Try to answer to bayan in chat $chat")
+        logger.debug("Try to answer to bayan in chat {}", chat)
         return if (chat?.bayanEnabled == true) bayanRepository.fetchBayanResponse() else null
     }
 }
