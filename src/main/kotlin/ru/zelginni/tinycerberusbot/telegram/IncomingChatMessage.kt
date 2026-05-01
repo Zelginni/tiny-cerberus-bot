@@ -6,6 +6,7 @@ data class IncomingChatMessage(
     val chatId: Long,
     val userId: Long,
     val messageId: Int,
+    val messageThreadId: Int? = null,
     val text: String?,
     val sentAt: Instant,
     val senderDisplayName: String? = null,

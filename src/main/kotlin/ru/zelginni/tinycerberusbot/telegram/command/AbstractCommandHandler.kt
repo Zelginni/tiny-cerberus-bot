@@ -26,7 +26,7 @@ abstract class AbstractCommandHandler(
     protected abstract fun handleCommand(command: ChatCommand)
 
     protected fun reply(command: ChatCommand, text: String) {
-        telegramCommandSender.sendReplyMessage(command.chatId, command.messageId, text)
+        telegramCommandSender.sendReplyMessage(command.chatId, command.messageId, text, command.messageThreadId)
     }
 
     protected fun banUser(chatId: Long, userId: Long) {

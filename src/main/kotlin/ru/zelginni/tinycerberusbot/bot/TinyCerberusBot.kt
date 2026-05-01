@@ -38,6 +38,7 @@ class TinyCerberusBot(
             chatId = chatId,
             userId = from.id,
             messageId = messageId,
+            messageThreadId = messageThreadId,
             text = text,
             sentAt = Instant.ofEpochSecond(date.toLong()),
             senderDisplayName = from.writableName(),
@@ -58,6 +59,7 @@ class TinyCerberusBot(
         IncomingChatMembers(
             chatId = chatId,
             messageId = messageId,
+            messageThreadId = messageThreadId,
             members = newChatMembers.map { member ->
                 IncomingChatMemberProfile(
                     userId = member.id,

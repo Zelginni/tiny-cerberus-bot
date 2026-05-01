@@ -22,7 +22,7 @@ class HelpCommandHandler(
 
     override fun handleCommand(command: ChatCommand) {
         val chat = chatService.getEnabledChatByTelegramId(command.chatId.toString())
-        messageSender.sendMessage(command.chatId, buildHelpText(chat))
+        messageSender.sendMessage(command.chatId, buildHelpText(chat), command.messageThreadId)
     }
 
     private fun buildHelpText(chat: Chat?): String {

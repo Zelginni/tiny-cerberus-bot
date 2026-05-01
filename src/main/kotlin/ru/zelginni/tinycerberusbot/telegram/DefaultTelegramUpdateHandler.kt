@@ -36,7 +36,7 @@ class DefaultTelegramUpdateHandler(
 
         val commandHandler = commandHandlers.firstOrNull { it.supports(command) }
         if (commandHandler == null) {
-            messageSender.sendReplyMessage(message.chatId, message.messageId, "Я не понимаю :(")
+            messageSender.sendReplyMessage(message.chatId, message.messageId, "Я не понимаю :(", message.messageThreadId)
             return
         }
 

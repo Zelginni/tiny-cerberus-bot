@@ -19,6 +19,7 @@ class CommandParser {
             chatId = message.chatId,
             userId = message.userId,
             messageId = message.messageId,
+            messageThreadId = message.messageThreadId,
             command = command,
             arguments = arguments,
             sentAt = message.sentAt,

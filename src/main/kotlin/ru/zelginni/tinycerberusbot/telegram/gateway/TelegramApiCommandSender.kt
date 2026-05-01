@@ -18,22 +18,24 @@ import java.io.Serializable
 class TelegramApiCommandSender(
     private val telegramClient: TelegramClient,
 ) : TelegramCommandSender {
-    override fun sendMessage(chatId: Long, text: String) {
-        execute(SendMessage(chatId.toString(), text))
+    override fun sendMessage(chatId: Long, text: String, messageThreadId: Int?) {
+        execute(SendMessage(chatId.toString(), text).withMessageThread(messageThreadId))
     }
 
-    override fun sendReplyMessage(chatId: Long, replyToMessageId: Int, text: String) {
+    override fun sendReplyMessage(chatId: Long, replyToMessageId: Int, text: String, messageThreadId: Int?) {
         execute(
             SendMessage(chatId.toString(), text).apply {
                 this.replyToMessageId = replyToMessageId
+                this.messageThreadId = messageThreadId
                 enableHtml(true)
             }
         )
     }
 
-    override fun sendSilentMessage(chatId: String, text: String): Message? {
+    override fun sendSilentMessage(chatId: String, text: String, messageThreadId: Int?): Message? {
         return execute(
             SendMessage(chatId, text).apply {
+                this.messageThreadId = messageThreadId
                 disableNotification = true
             }
         )
@@ -72,6 +74,9 @@ class TelegramApiCommandSender(
             null
         }
     }
+
+    private fun SendMessage.withMessageThread(messageThreadId: Int?): SendMessage =
+        apply { this.messageThreadId = messageThreadId }
 
     private companion object {
         private val logger = LoggerFactory.getLogger(TelegramApiCommandSender::class.java)

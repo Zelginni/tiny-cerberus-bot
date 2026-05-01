@@ -20,7 +20,7 @@ class TopChatMembersCommandHandler(
 
     override fun handleCommand(command: ChatCommand) {
         if (!statisticsFeatureService.isEnabled(command.chatId)) {
-            messageSender.sendMessage(command.chatId, statisticsFeatureService.disabledMessage())
+            messageSender.sendMessage(command.chatId, statisticsFeatureService.disabledMessage(), command.messageThreadId)
             return
         }
 
@@ -33,6 +33,6 @@ class TopChatMembersCommandHandler(
             messageCount = { it.messageCount },
         )
 
-        messageSender.sendMessage(command.chatId, text)
+        messageSender.sendMessage(command.chatId, text, command.messageThreadId)
     }
 }

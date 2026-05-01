@@ -34,6 +34,7 @@ class CommandParserTest {
             chatId = 1L,
             userId = 2L,
             messageId = 3,
+            messageThreadId = 4,
             text = text,
             sentAt = Instant.EPOCH,
         )
@@ -43,6 +44,7 @@ class CommandParserTest {
             chatId = 1L,
             userId = 2L,
             messageId = 3,
+            messageThreadId = 4,
             command = command,
             arguments = arguments,
             sentAt = Instant.EPOCH,

@@ -18,7 +18,7 @@ class BayanMessageHandler(
 
         bayanService.findResponseForChat(message.chatId)
             ?.response
-            ?.let { telegramCommandSender.sendReplyMessage(message.chatId, message.messageId, it) }
+            ?.let { telegramCommandSender.sendReplyMessage(message.chatId, message.messageId, it, message.messageThreadId) }
     }
 
     private companion object {

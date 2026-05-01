@@ -20,7 +20,7 @@ class SilentChatMembersCommandHandler(
 
     override fun handleCommand(command: ChatCommand) {
         if (!statisticsFeatureService.isEnabled(command.chatId)) {
-            messageSender.sendMessage(command.chatId, statisticsFeatureService.disabledMessage())
+            messageSender.sendMessage(command.chatId, statisticsFeatureService.disabledMessage(), command.messageThreadId)
             return
         }
 
@@ -36,7 +36,7 @@ class SilentChatMembersCommandHandler(
             ) { it.displayName }
         }
 
-        messageSender.sendMessage(command.chatId, text)
+        messageSender.sendMessage(command.chatId, text, command.messageThreadId)
     }
 
     private fun ChatCommand.silenceDays(): Long =

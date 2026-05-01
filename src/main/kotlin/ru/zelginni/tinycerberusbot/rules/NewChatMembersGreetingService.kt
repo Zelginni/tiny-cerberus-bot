@@ -32,7 +32,8 @@ class NewChatMembersGreetingService(
         telegramCommandSender.sendReplyMessage(
             members.chatId,
             members.messageId,
-            "Привет, $names!\n\n$rules"
+            "Привет, $names!\n\n$rules",
+            members.messageThreadId,
         )
     }
 }

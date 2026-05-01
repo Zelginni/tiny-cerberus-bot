@@ -3,6 +3,7 @@ package ru.zelginni.tinycerberusbot.telegram
 data class IncomingChatMembers(
     val chatId: Long,
     val messageId: Int,
+    val messageThreadId: Int? = null,
     val members: List<IncomingChatMemberProfile>,
 )
 
