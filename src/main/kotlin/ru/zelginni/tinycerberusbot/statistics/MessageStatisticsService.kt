@@ -15,8 +15,12 @@ class MessageStatisticsService(
 ) {
     @Transactional
     fun recordMessage(message: IncomingChatMessage) {
-        if (!statisticsFeatureService.isEnabled(message.chatId)) {
-            logger.debug("Skip message statistics recording chatId={} because statistics feature is disabled", message.chatId)
+        if (!statisticsFeatureService.shouldRecordMessage(message)) {
+            logger.debug(
+                "Skip message statistics recording chatId={} messageThreadId={}",
+                message.chatId,
+                message.messageThreadId,
+            )
             return
         }
 

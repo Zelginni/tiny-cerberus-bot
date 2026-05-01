@@ -40,6 +40,7 @@ class ChatControllerTest {
                     name = chatName,
                     telegramId = telegramId,
                     fullStatisticsLimit = 10,
+                    ignoredStatisticsMessageThreadIds = listOf(100, 200),
                 )
             )
             contentType = MediaType.APPLICATION_JSON
@@ -50,6 +51,7 @@ class ChatControllerTest {
         val result = chatRepository.findByTelegramId(telegramId)
         assertEquals(chatName, result?.name)
         assertEquals(10, result?.fullStatisticsLimit)
+        assertEquals(setOf(100, 200), result?.ignoredStatisticsMessageThreadIds)
     }
 
     @Test
@@ -127,6 +129,29 @@ class ChatControllerTest {
 
         val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
         assertEquals(15, modifiedChat.fullStatisticsLimit)
+    }
+
+    @Test
+    @WithMockUser
+    fun changeIgnoredStatisticsTopics() {
+        val chatName = "Web test chat ignored topics"
+        val telegramId = "-888888888"
+        val chat = Chat(name = chatName, telegramId = telegramId)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/ignored-statistics-topics?telegramId=$telegramId") {
+            content = objectMapper.writeValueAsString(
+                IgnoredStatisticsTopicsRequest(
+                    ignoredStatisticsMessageThreadIds = listOf(11, 22, 11),
+                )
+            )
+            contentType = MediaType.APPLICATION_JSON
+        }
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(setOf(11, 22), modifiedChat.ignoredStatisticsMessageThreadIds)
     }
 
     @Test

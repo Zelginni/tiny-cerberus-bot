@@ -27,6 +27,14 @@ data class Chat(
     var statisticsEnabled: Boolean? = false,
     @Column(nullable = false)
     var fullStatisticsLimit: Int = DEFAULT_FULL_STATISTICS_LIMIT,
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+        schema = "cerberus",
+        name = "chat_ignored_statistics_topics",
+        joinColumns = [JoinColumn(name = "chat_id")]
+    )
+    @Column(name = "message_thread_id", nullable = false)
+    var ignoredStatisticsMessageThreadIds: MutableSet<Int> = mutableSetOf(),
 )
 
 const val DEFAULT_FULL_STATISTICS_LIMIT = -1

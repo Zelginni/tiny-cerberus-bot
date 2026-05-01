@@ -120,6 +120,26 @@ class ChatController(
         return ResponseEntity.ok("Full statistics limit in chat $telegramId changed to $fullStatisticsLimit")
     }
 
+    @PutMapping("/ignored-statistics-topics")
+    @Operation(
+        summary = "Change ignored statistics topics",
+        description = "Change topic ids where messages should not be counted in statistics",
+        security = [SecurityRequirement(name = "basicAuth")]
+    )
+    fun changeIgnoredStatisticsTopics(
+        @RequestParam telegramId: String,
+        @RequestBody request: IgnoredStatisticsTopicsRequest,
+    ): ResponseEntity<String> {
+        logger.info(
+            "Change ignored statistics topics in chat {} to {}",
+            telegramId,
+            request.ignoredStatisticsMessageThreadIds,
+        )
+        chatService.changeIgnoredStatisticsMessageThreadIds(telegramId, request.ignoredStatisticsMessageThreadIds)
+        chatService.cleanCache()
+        return ResponseEntity.ok("Ignored statistics topics in chat $telegramId changed")
+    }
+
     @GetMapping("/cache/clean")
     @Operation(
         summary = "Clean chat cache",

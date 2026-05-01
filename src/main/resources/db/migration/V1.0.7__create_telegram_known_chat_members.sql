@@ -1,4 +1,4 @@
-create table telegram_known_chat_members (
+create table cerberus.telegram_known_chat_members (
     chat_id bigint not null,
     user_id bigint not null,
     display_name varchar(255) not null,
