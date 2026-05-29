@@ -1,0 +1,802 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Tiny Cerberus Bot",
+        "description": "Discipline Telegram Chat bot",
+        "version": "v1.2.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:18080",
+            "description": "Generated server url"
+        }
+    ],
+    "paths": {
+        "/admin/chat/warn-limit": {
+            "put": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Change warn limit",
+                "description": "Change warn limit for existing chat",
+                "operationId": "changeWarnLimit",
+                "parameters": [
+                    {
+                        "name": "telegramId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "warnLimit",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/ignored-statistics-topics": {
+            "put": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Change ignored statistics topics",
+                "description": "Change topic ids where messages should not be counted in statistics",
+                "operationId": "changeIgnoredStatisticsTopics",
+                "parameters": [
+                    {
+                        "name": "telegramId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IgnoredStatisticsTopicsRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/full-statistics-limit": {
+            "put": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Change full statistics limit",
+                "description": "Change full statistics limit for existing chat",
+                "operationId": "changeFullStatisticsLimit",
+                "parameters": [
+                    {
+                        "name": "telegramId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fullStatisticsLimit",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/enable": {
+            "put": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Enable chat",
+                "description": "Enable chat for bot",
+                "operationId": "enableChat",
+                "parameters": [
+                    {
+                        "name": "telegramId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/enable/{feature}": {
+            "put": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Enable feature",
+                "description": "Enable feature for chat",
+                "operationId": "enableFeature",
+                "parameters": [
+                    {
+                        "name": "telegramId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "feature",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/disable": {
+            "put": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Disable chat",
+                "description": "Disable chat for bot",
+                "operationId": "disableChat",
+                "parameters": [
+                    {
+                        "name": "telegramId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/disable/{feature}": {
+            "put": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Disable feature",
+                "description": "Disable feature for chat",
+                "operationId": "disableFeature",
+                "parameters": [
+                    {
+                        "name": "telegramId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "feature",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/bot/state": {
+            "get": {
+                "tags": [
+                    "bot-controller"
+                ],
+                "operationId": "getState",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BotStateResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "bot-controller"
+                ],
+                "operationId": "setState",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetBotStateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BotStateResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/chat": {
+            "post": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "New chat",
+                "description": "Add new chat to available chats",
+                "operationId": "createChat",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatInsertDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/cache/clean": {
+            "get": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "Clean chat cache",
+                "description": "Clean chat cache",
+                "operationId": "cleanCache",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/chat/all": {
+            "get": {
+                "tags": [
+                    "chat-controller"
+                ],
+                "summary": "List of all chats",
+                "description": "View all chats stored in configs",
+                "operationId": "allChats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AllChatResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/bot/statistics/chats/{chatId}": {
+            "get": {
+                "tags": [
+                    "statistics-controller"
+                ],
+                "operationId": "getChatStatistics",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ChatMemberStatisticsView"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bot/statistics/chats/{chatId}/top": {
+            "get": {
+                "tags": [
+                    "statistics-controller"
+                ],
+                "operationId": "getChatTop",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TopChatMemberView"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bot/statistics/chats/{chatId}/silent-members": {
+            "get": {
+                "tags": [
+                    "statistics-controller"
+                ],
+                "operationId": "getSilentMembers",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "days",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SilentChatMemberView"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bot/statistics/chats/{chatId}/all": {
+            "get": {
+                "tags": [
+                    "statistics-controller"
+                ],
+                "operationId": "getCompleteChatStatistics",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ChatMemberStatisticsView"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bot/daily-digest": {
+            "get": {
+                "tags": [
+                    "bot-controller"
+                ],
+                "summary": "Launch digest",
+                "description": "Launch daily digest. Suggested for testing purposes only",
+                "operationId": "dailyDigest",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "IgnoredStatisticsTopicsRequest": {
+                "type": "object",
+                "properties": {
+                    "ignoredStatisticsMessageThreadIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                }
+            },
+            "SetBotStateRequest": {
+                "type": "object",
+                "properties": {
+                    "state": {
+                        "type": "string",
+                        "enum": [
+                            "ENABLED",
+                            "DISABLED"
+                        ]
+                    }
+                }
+            },
+            "BotStateResponse": {
+                "type": "object",
+                "properties": {
+                    "state": {
+                        "type": "string",
+                        "enum": [
+                            "ENABLED",
+                            "DISABLED"
+                        ]
+                    }
+                }
+            },
+            "ChatInsertDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "telegramId": {
+                        "type": "string"
+                    },
+                    "warnLimit": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "fullStatisticsLimit": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "ignoredStatisticsMessageThreadIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                }
+            },
+            "AllChatResponse": {
+                "type": "object",
+                "properties": {
+                    "chats": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ChatViewDto"
+                        }
+                    }
+                }
+            },
+            "ChatViewDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "telegramId": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "warnLimit": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "bayanEnabled": {
+                        "type": "boolean"
+                    },
+                    "digestEnabled": {
+                        "type": "boolean"
+                    },
+                    "rulesEnabled": {
+                        "type": "boolean"
+                    },
+                    "statisticsEnabled": {
+                        "type": "boolean"
+                    },
+                    "fullStatisticsLimit": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "ignoredStatisticsMessageThreadIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                }
+            },
+            "ChatMemberStatisticsView": {
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "messageCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "TopChatMemberView": {
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "messageCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "SilentChatMemberView": {
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "basicAuth": {
+                "type": "http",
+                "scheme": "basic"
+            }
+        }
+    }
+}
