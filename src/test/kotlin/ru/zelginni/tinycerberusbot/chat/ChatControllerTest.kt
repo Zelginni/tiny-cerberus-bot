@@ -15,6 +15,12 @@ import org.springframework.test.web.servlet.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import ru.zelginni.tinycerberusbot.bot.BotState
 import ru.zelginni.tinycerberusbot.bot.SetBotStateRequest
+import ru.zelginni.tinycerberusbot.user.User
+import ru.zelginni.tinycerberusbot.user.UserRepository
+import ru.zelginni.tinycerberusbot.warn.Warn
+import ru.zelginni.tinycerberusbot.warn.WarnRepository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -28,6 +34,12 @@ class ChatControllerTest {
 
     @Autowired
     private lateinit var chatRepository: ChatRepository
+
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var warnRepository: WarnRepository
 
     @Test
     @WithMockUser
@@ -168,6 +180,39 @@ class ChatControllerTest {
 
         val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
         assertEquals(true, modifiedChat.statisticsEnabled)
+    }
+
+    @Test
+    @WithMockUser
+    fun getChatWarnStatistics() {
+        val telegramId = "-999999999"
+        val chat = chatRepository.saveAndFlush(Chat(name = "Warn statistics chat", telegramId = telegramId, warnLimit = 3))
+        val user = userRepository.saveAndFlush(User(telegramId = "12345", username = "warned-user", chat = chat))
+        warnRepository.saveAllAndFlush(
+            listOf(
+                Warn(
+                    dateCreated = Timestamp.valueOf(LocalDateTime.of(2026, 1, 1, 12, 0)),
+                    authorTelegramId = "1",
+                    authorUsername = "admin",
+                    user = user,
+                ),
+                Warn(
+                    dateCreated = Timestamp.valueOf(LocalDateTime.of(2026, 1, 2, 12, 0)),
+                    authorTelegramId = "2",
+                    authorUsername = "admin-2",
+                    user = user,
+                ),
+            )
+        )
+
+        mockMvc.get("/admin/bot/statistics/chats/$telegramId/warns")
+            .andDo { print() }
+            .andExpect { status().isOk }
+            .andExpect { jsonPath("$.chatId") { value(telegramId.toLong()) } }
+            .andExpect { jsonPath("$.warnLimit") { value(3) } }
+            .andExpect { jsonPath("$.users[0].telegramId") { value("12345") } }
+            .andExpect { jsonPath("$.users[0].username") { value("warned-user") } }
+            .andExpect { jsonPath("$.users[0].warnCount") { value(2) } }
     }
 
     @Test

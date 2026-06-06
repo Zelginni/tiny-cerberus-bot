@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
+import org.telegram.telegrambots.meta.api.objects.chat.Chat as TelegramChat
 import org.telegram.telegrambots.meta.api.objects.message.Message
 import ru.zelginni.tinycerberusbot.telegram.*
 import java.time.Instant
@@ -42,14 +43,15 @@ class TinyCerberusBot(
     private fun Message.toIncomingChatMessage(): IncomingChatMessage =
         IncomingChatMessage(
             chatId = chatId,
-            userId = from.id,
+            userId = senderChat?.id ?: from.id,
             messageId = messageId,
             messageThreadId = messageThreadId,
             text = text,
             sentAt = Instant.ofEpochSecond(date.toLong()),
-            senderDisplayName = from.writableName(),
-            senderUsername = from.userName,
+            senderDisplayName = senderChat?.writableName() ?: from.writableName(),
+            senderUsername = senderChat?.userName ?: from.userName,
             senderIsBot = from.isBot,
+            automaticForward = isAutomaticForward == true,
             replyTo = replyToMessage?.toIncomingChatMessage(),
             hasText = hasText(),
             hasPhoto = hasPhoto(),
@@ -58,6 +60,11 @@ class TinyCerberusBot(
 
     private fun User.writableName(): String =
         listOfNotNull(firstName, lastName)
+            .joinToString(" ")
+            .ifBlank { userName ?: id.toString() }
+
+    private fun TelegramChat.writableName(): String =
+        title ?: listOfNotNull(firstName, lastName)
             .joinToString(" ")
             .ifBlank { userName ?: id.toString() }
 

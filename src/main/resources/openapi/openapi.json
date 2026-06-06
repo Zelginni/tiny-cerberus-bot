@@ -3,7 +3,7 @@
     "info": {
         "title": "Tiny Cerberus Bot",
         "description": "Discipline Telegram Chat bot",
-        "version": "v1.2.0"
+        "version": "v1.2.1"
     },
     "servers": [
         {
@@ -488,6 +488,37 @@
                 }
             }
         },
+        "/admin/bot/statistics/chats/{chatId}/warns": {
+            "get": {
+                "tags": [
+                    "statistics-controller"
+                ],
+                "operationId": "getChatWarnStatistics",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatWarnStatisticsView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/bot/statistics/chats/{chatId}/top": {
             "get": {
                 "tags": [
@@ -760,6 +791,44 @@
                     "messageCount": {
                         "type": "integer",
                         "format": "int64"
+                    }
+                }
+            },
+            "ChatUserWarnStatisticsView": {
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "telegramId": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "warnCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ChatWarnStatisticsView": {
+                "type": "object",
+                "properties": {
+                    "chatId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "warnLimit": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ChatUserWarnStatisticsView"
+                        }
                     }
                 }
             },

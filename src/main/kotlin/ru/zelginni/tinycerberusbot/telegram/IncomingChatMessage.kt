@@ -12,6 +12,7 @@ data class IncomingChatMessage(
     val senderDisplayName: String? = null,
     val senderUsername: String? = null,
     val senderIsBot: Boolean = false,
+    val automaticForward: Boolean = false,
     val replyTo: IncomingChatMessage? = null,
     val hasText: Boolean = text != null,
     val hasPhoto: Boolean = false,

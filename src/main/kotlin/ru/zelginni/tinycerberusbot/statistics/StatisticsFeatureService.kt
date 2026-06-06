@@ -16,6 +16,9 @@ class StatisticsFeatureService(
         if (chat?.statisticsEnabled != true) {
             return false
         }
+        if (message.automaticForward) {
+            return false
+        }
 
         val messageThreadId = message.messageThreadId ?: return true
         return messageThreadId !in chat.ignoredStatisticsMessageThreadIds
