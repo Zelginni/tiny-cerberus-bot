@@ -3,7 +3,7 @@
     "info": {
         "title": "Tiny Cerberus Bot",
         "description": "Discipline Telegram Chat bot",
-        "version": "v1.2.1"
+        "version": "v1.2.3"
     },
     "servers": [
         {
@@ -655,6 +655,46 @@
                         "basicAuth": []
                     }
                 ]
+            }
+        },
+        "/admin/bot/statistics/chats/{chatId}/known-members/{userId}": {
+            "delete": {
+                "tags": [
+                    "statistics-controller"
+                ],
+                "operationId": "forgetKnownChatMember",
+                "parameters": [
+                    {
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     },

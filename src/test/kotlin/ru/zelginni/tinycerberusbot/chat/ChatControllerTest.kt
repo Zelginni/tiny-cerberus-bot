@@ -9,17 +9,22 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import ru.zelginni.tinycerberusbot.bot.BotState
 import ru.zelginni.tinycerberusbot.bot.SetBotStateRequest
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramKnownChatMember
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramKnownChatMemberId
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramKnownChatMemberRepository
 import ru.zelginni.tinycerberusbot.user.User
 import ru.zelginni.tinycerberusbot.user.UserRepository
 import ru.zelginni.tinycerberusbot.warn.Warn
 import ru.zelginni.tinycerberusbot.warn.WarnRepository
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDateTime
 
 @SpringBootTest
@@ -40,6 +45,9 @@ class ChatControllerTest {
 
     @Autowired
     private lateinit var warnRepository: WarnRepository
+
+    @Autowired
+    private lateinit var knownChatMemberRepository: TelegramKnownChatMemberRepository
 
     @Test
     @WithMockUser
@@ -213,6 +221,27 @@ class ChatControllerTest {
             .andExpect { jsonPath("$.users[0].telegramId") { value("12345") } }
             .andExpect { jsonPath("$.users[0].username") { value("warned-user") } }
             .andExpect { jsonPath("$.users[0].warnCount") { value(2) } }
+    }
+
+    @Test
+    @WithMockUser
+    fun forgetKnownChatMember() {
+        val chatId = -123456789L
+        val userId = 987654321L
+        val id = TelegramKnownChatMemberId(chatId = chatId, userId = userId)
+        knownChatMemberRepository.saveAndFlush(
+            TelegramKnownChatMember(
+                id = id,
+                displayName = "Known member",
+                lastSeenAt = Instant.EPOCH,
+            )
+        )
+
+        mockMvc.delete("/admin/bot/statistics/chats/$chatId/known-members/$userId")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        assertEquals(false, knownChatMemberRepository.existsById(id))
     }
 
     @Test

@@ -2,6 +2,8 @@ package ru.zelginni.tinycerberusbot.statistics
 
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -9,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import ru.zelginni.tinycerberusbot.statistics.SilentChatMemberService.Companion.DEFAULT_SILENCE_DAYS
+import ru.zelginni.tinycerberusbot.telegram.IncomingChatMemberLeft
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberRegistry
 
 @RestController
 @RequestMapping("/admin/bot/statistics")
@@ -18,6 +22,7 @@ class StatisticsController(
     private val topChatMemberService: TopChatMemberService,
     private val fullChatStatisticsService: FullChatStatisticsService,
     private val warnStatisticsService: WarnStatisticsService,
+    private val chatMemberRegistry: TelegramChatMemberRegistry,
 ) {
     @GetMapping("/chats/{chatId}")
     fun getChatStatistics(@PathVariable chatId: Long): List<ChatMemberStatisticsView> {
@@ -51,6 +56,16 @@ class StatisticsController(
         logger.info("Admin API call get chat warn statistics chatId={}", chatId)
         return warnStatisticsService.getChatWarnStatistics(chatId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Chat $chatId not found or disabled")
+    }
+
+    @DeleteMapping("/chats/{chatId}/known-members/{userId}")
+    fun forgetKnownChatMember(
+        @PathVariable chatId: Long,
+        @PathVariable userId: Long,
+    ): ResponseEntity<String> {
+        logger.info("Admin API call forget known chat member chatId={} userId={}", chatId, userId)
+        chatMemberRegistry.forgetMember(IncomingChatMemberLeft(chatId = chatId, userId = userId))
+        return ResponseEntity.ok("Known chat member $userId in chat $chatId forgotten")
     }
 
     private fun Long?.silenceDays(): Long =
