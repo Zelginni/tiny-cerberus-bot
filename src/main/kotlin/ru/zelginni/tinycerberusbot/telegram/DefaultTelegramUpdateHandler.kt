@@ -25,6 +25,10 @@ class DefaultTelegramUpdateHandler(
         newChatMembersGreetingService.greet(members)
     }
 
+    override fun handleLeftChatMember(member: IncomingChatMemberLeft) {
+        chatMemberRegistry.forgetMember(member)
+    }
+
     override fun handleMessage(message: IncomingChatMessage) {
         chatMemberRegistry.rememberSender(message)
         statisticsService.recordMessage(message)

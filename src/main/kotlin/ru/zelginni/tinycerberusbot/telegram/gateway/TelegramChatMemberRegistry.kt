@@ -3,6 +3,7 @@ package ru.zelginni.tinycerberusbot.telegram.gateway
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import ru.zelginni.tinycerberusbot.telegram.IncomingChatMemberLeft
 import ru.zelginni.tinycerberusbot.telegram.IncomingChatMembers
 import ru.zelginni.tinycerberusbot.telegram.IncomingChatMessage
 import java.time.Clock
@@ -26,6 +27,15 @@ class TelegramChatMemberRegistry(
     @Transactional
     fun rememberMembers(members: IncomingChatMembers) {
         members.members.forEach { rememberMember(chatId = members.chatId, it.userId, it.displayName) }
+    }
+
+    @Transactional
+    fun forgetMember(member: IncomingChatMemberLeft) {
+        val id = TelegramKnownChatMemberId(chatId = member.chatId, userId = member.userId)
+        if (repository.existsById(id)) {
+            logger.debug("Forgetting known chat member chatId={} userId={}", member.chatId, member.userId)
+            repository.deleteById(id)
+        }
     }
 
     private fun rememberMember(chatId: Long, userId: Long, displayName: String) {

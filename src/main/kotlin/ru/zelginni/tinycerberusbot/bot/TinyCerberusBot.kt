@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chat.Chat as TelegramChat
+import org.telegram.telegrambots.meta.api.objects.chatmember.ChatMemberUpdated
 import org.telegram.telegrambots.meta.api.objects.message.Message
 import ru.zelginni.tinycerberusbot.telegram.*
 import java.time.Instant
@@ -30,6 +31,10 @@ class TinyCerberusBot(
         if (update == null) {
             return
         }
+        if (update.hasChatMember()) {
+            update.chatMember.toIncomingChatMemberLeft()?.let { telegramUpdateHandler.handleLeftChatMember(it) }
+            return
+        }
         if (!update.hasMessage()) {
             return
         }
@@ -37,6 +42,7 @@ class TinyCerberusBot(
         if (message.newChatMembers.isNotEmpty()) {
             telegramUpdateHandler.handleNewChatMembers(message.toIncomingChatMembers())
         }
+        message.toIncomingChatMemberLeft()?.let { telegramUpdateHandler.handleLeftChatMember(it) }
         telegramUpdateHandler.handleMessage(message.toIncomingChatMessage())
     }
 
@@ -83,7 +89,27 @@ class TinyCerberusBot(
             }
         )
 
+    private fun Message.toIncomingChatMemberLeft(): IncomingChatMemberLeft? =
+        leftChatMember?.let { member ->
+            IncomingChatMemberLeft(
+                chatId = chatId,
+                userId = member.id,
+            )
+        }
+
+    private fun ChatMemberUpdated.toIncomingChatMemberLeft(): IncomingChatMemberLeft? {
+        if (newChatMember.status !in LEFT_CHAT_MEMBER_STATUSES) {
+            return null
+        }
+
+        return IncomingChatMemberLeft(
+            chatId = chat.id,
+            userId = newChatMember.user.id,
+        )
+    }
+
     private companion object {
         private val logger = LoggerFactory.getLogger(DefaultTelegramUpdateHandler::class.java)
+        private val LEFT_CHAT_MEMBER_STATUSES = setOf("left", "kicked")
     }
 }
