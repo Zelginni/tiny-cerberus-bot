@@ -38,6 +38,13 @@ class TelegramChatMemberRegistry(
         }
     }
 
+    @Transactional
+    fun forgetMembers(chatId: Long, userIds: Collection<Long>) {
+        userIds.distinct().forEach { userId ->
+            forgetMember(IncomingChatMemberLeft(chatId = chatId, userId = userId))
+        }
+    }
+
     private fun rememberMember(chatId: Long, userId: Long, displayName: String) {
         val id = TelegramKnownChatMemberId(chatId = chatId, userId = userId)
         val existingMember = repository.findById(id)

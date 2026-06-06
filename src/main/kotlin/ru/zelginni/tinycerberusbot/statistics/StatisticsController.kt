@@ -6,12 +6,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import ru.zelginni.tinycerberusbot.statistics.SilentChatMemberService.Companion.DEFAULT_SILENCE_DAYS
 import ru.zelginni.tinycerberusbot.telegram.IncomingChatMemberLeft
+import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMember
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramChatMemberRegistry
 
 @RestController
@@ -58,6 +60,22 @@ class StatisticsController(
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Chat $chatId not found or disabled")
     }
 
+    @GetMapping("/chats/{chatId}/known-members")
+    fun getKnownChatMembers(@PathVariable chatId: Long): List<TelegramChatMember> {
+        logger.info("Admin API call get known chat members chatId={}", chatId)
+        return chatMemberRegistry.getKnownMembers(chatId)
+    }
+
+    @DeleteMapping("/chats/{chatId}/known-members")
+    fun forgetKnownChatMembers(
+        @PathVariable chatId: Long,
+        @RequestBody request: ForgetKnownChatMembersRequest,
+    ): ResponseEntity<String> {
+        logger.info("Admin API call forget known chat members chatId={} userIds={}", chatId, request.userIds)
+        chatMemberRegistry.forgetMembers(chatId, request.userIds)
+        return ResponseEntity.ok("Known chat members in chat $chatId forgotten")
+    }
+
     @DeleteMapping("/chats/{chatId}/known-members/{userId}")
     fun forgetKnownChatMember(
         @PathVariable chatId: Long,
@@ -75,3 +93,7 @@ class StatisticsController(
         private val logger = LoggerFactory.getLogger(StatisticsController::class.java)
     }
 }
+
+data class ForgetKnownChatMembersRequest(
+    val userIds: List<Long> = emptyList(),
+)

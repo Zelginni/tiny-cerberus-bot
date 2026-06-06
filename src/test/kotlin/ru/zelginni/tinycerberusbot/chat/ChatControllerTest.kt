@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import ru.zelginni.tinycerberusbot.bot.BotState
 import ru.zelginni.tinycerberusbot.bot.SetBotStateRequest
+import ru.zelginni.tinycerberusbot.statistics.ForgetKnownChatMembersRequest
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramKnownChatMember
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramKnownChatMemberId
 import ru.zelginni.tinycerberusbot.telegram.gateway.TelegramKnownChatMemberRepository
@@ -242,6 +243,61 @@ class ChatControllerTest {
             .andExpect { status().isOk }
 
         assertEquals(false, knownChatMemberRepository.existsById(id))
+    }
+
+    @Test
+    @WithMockUser
+    fun getKnownChatMembers() {
+        val chatId = -222222222L
+        knownChatMemberRepository.saveAllAndFlush(
+            listOf(
+                TelegramKnownChatMember(
+                    id = TelegramKnownChatMemberId(chatId = chatId, userId = 2L),
+                    displayName = "Beta member",
+                    lastSeenAt = Instant.EPOCH,
+                ),
+                TelegramKnownChatMember(
+                    id = TelegramKnownChatMemberId(chatId = chatId, userId = 1L),
+                    displayName = "Alpha member",
+                    lastSeenAt = Instant.EPOCH,
+                ),
+            )
+        )
+
+        mockMvc.get("/admin/bot/statistics/chats/$chatId/known-members")
+            .andDo { print() }
+            .andExpect { status().isOk }
+            .andExpect { jsonPath("$[0].userId") { value(1) } }
+            .andExpect { jsonPath("$[0].displayName") { value("Alpha member") } }
+            .andExpect { jsonPath("$[1].userId") { value(2) } }
+            .andExpect { jsonPath("$[1].displayName") { value("Beta member") } }
+    }
+
+    @Test
+    @WithMockUser
+    fun forgetKnownChatMembers() {
+        val chatId = -333333333L
+        val firstId = TelegramKnownChatMemberId(chatId = chatId, userId = 1L)
+        val secondId = TelegramKnownChatMemberId(chatId = chatId, userId = 2L)
+        val untouchedId = TelegramKnownChatMemberId(chatId = chatId, userId = 3L)
+        knownChatMemberRepository.saveAllAndFlush(
+            listOf(
+                TelegramKnownChatMember(id = firstId, displayName = "First", lastSeenAt = Instant.EPOCH),
+                TelegramKnownChatMember(id = secondId, displayName = "Second", lastSeenAt = Instant.EPOCH),
+                TelegramKnownChatMember(id = untouchedId, displayName = "Untouched", lastSeenAt = Instant.EPOCH),
+            )
+        )
+
+        mockMvc.delete("/admin/bot/statistics/chats/$chatId/known-members") {
+            content = objectMapper.writeValueAsString(ForgetKnownChatMembersRequest(userIds = listOf(1L, 2L, 2L)))
+            contentType = MediaType.APPLICATION_JSON
+        }
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        assertEquals(false, knownChatMemberRepository.existsById(firstId))
+        assertEquals(false, knownChatMemberRepository.existsById(secondId))
+        assertEquals(true, knownChatMemberRepository.existsById(untouchedId))
     }
 
     @Test
