@@ -36,10 +36,12 @@ class DefaultTelegramUpdateHandler(
 
         val commandHandler = commandHandlers.firstOrNull { it.supports(command) }
         if (commandHandler == null) {
+            logger.debug("Command '{}' is unknown", command.command)
             messageSender.sendReplyMessage(message.chatId, message.messageId, "Я не понимаю :(", message.messageThreadId)
             return
         }
 
+        logger.debug("Command '{}' is handled by {}", command.command, commandHandler.javaClass.name)
         commandHandler.handle(command)
     }
 

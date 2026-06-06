@@ -1,13 +1,11 @@
 package ru.zelginni.tinycerberusbot.bot
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.message.Message
-import ru.zelginni.tinycerberusbot.telegram.IncomingChatMemberProfile
-import ru.zelginni.tinycerberusbot.telegram.IncomingChatMembers
-import ru.zelginni.tinycerberusbot.telegram.IncomingChatMessage
-import ru.zelginni.tinycerberusbot.telegram.TelegramUpdateHandler
+import ru.zelginni.tinycerberusbot.telegram.*
 import java.time.Instant
 
 @Component
@@ -17,6 +15,14 @@ class TinyCerberusBot(
 ) {
 
     fun consume(update: Update?) {
+        try {
+            tryConsume(update)
+        } catch (e: Exception) {
+            logger.error("Something went wrong while consuming update", e)
+        }
+    }
+
+    private fun tryConsume(update: Update?) {
         if (administrationService.currentState() != BotState.ENABLED) {
             return
         }
@@ -69,4 +75,8 @@ class TinyCerberusBot(
                 )
             }
         )
+
+    private companion object {
+        private val logger = LoggerFactory.getLogger(DefaultTelegramUpdateHandler::class.java)
+    }
 }
