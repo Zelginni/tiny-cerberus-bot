@@ -22,6 +22,7 @@ class SilentChatMemberService(
                 SilentChatMemberView(
                     userId = it.userId,
                     displayName = it.displayName,
+                    username = it.username,
                 )
             }
     }
@@ -34,4 +35,5 @@ class SilentChatMemberService(
 data class SilentChatMemberView(
     val userId: Long,
     val displayName: String,
+    val username: String? = null,
 )

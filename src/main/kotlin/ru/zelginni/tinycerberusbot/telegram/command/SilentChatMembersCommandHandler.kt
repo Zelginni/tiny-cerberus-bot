@@ -1,6 +1,7 @@
 package ru.zelginni.tinycerberusbot.telegram.command
 
 import org.springframework.stereotype.Component
+import ru.zelginni.tinycerberusbot.statistics.SilentChatMemberView
 import ru.zelginni.tinycerberusbot.statistics.StatisticsFeatureService
 import ru.zelginni.tinycerberusbot.statistics.SilentChatMemberService
 import ru.zelginni.tinycerberusbot.statistics.SilentChatMemberService.Companion.DEFAULT_SILENCE_DAYS
@@ -33,11 +34,14 @@ class SilentChatMembersCommandHandler(
             silentMembers.joinToString(
                 separator = "\n",
                 prefix = "Не писали последние $days дней:\n",
-            ) { it.displayName }
+            ) { it.displayNameWithUsername() }
         }
 
         messageSender.sendMessage(command.chatId, text, command.messageThreadId)
     }
+
+    private fun SilentChatMemberView.displayNameWithUsername(): String =
+        username?.let { "$displayName (@$it)" } ?: displayName
 
     private fun ChatCommand.silenceDays(): Long =
         arguments

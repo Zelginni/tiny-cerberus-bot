@@ -9,4 +9,5 @@ interface TelegramChatMemberService {
 data class TelegramChatMember(
     val userId: Long,
     val displayName: String,
+    val username: String? = null,
 )

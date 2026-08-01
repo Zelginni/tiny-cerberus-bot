@@ -255,11 +255,13 @@ class ChatControllerTest {
                     id = TelegramKnownChatMemberId(chatId = chatId, userId = 2L),
                     displayName = "Beta member",
                     lastSeenAt = Instant.EPOCH,
+                    username = "beta_member",
                 ),
                 TelegramKnownChatMember(
                     id = TelegramKnownChatMemberId(chatId = chatId, userId = 1L),
                     displayName = "Alpha member",
                     lastSeenAt = Instant.EPOCH,
+                    username = "alpha_member",
                 ),
             )
         )
@@ -269,8 +271,10 @@ class ChatControllerTest {
             .andExpect { status().isOk }
             .andExpect { jsonPath("$[0].userId") { value(1) } }
             .andExpect { jsonPath("$[0].displayName") { value("Alpha member") } }
+            .andExpect { jsonPath("$[0].username") { value("alpha_member") } }
             .andExpect { jsonPath("$[1].userId") { value(2) } }
             .andExpect { jsonPath("$[1].displayName") { value("Beta member") } }
+            .andExpect { jsonPath("$[1].username") { value("beta_member") } }
     }
 
     @Test

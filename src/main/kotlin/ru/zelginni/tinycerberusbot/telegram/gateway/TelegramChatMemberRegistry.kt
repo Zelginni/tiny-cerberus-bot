@@ -20,13 +20,16 @@ class TelegramChatMemberRegistry(
         rememberMember(
             chatId = message.chatId,
             userId = message.userId,
-            displayName = displayName
+            displayName = displayName,
+            username = message.senderUsername,
         )
     }
 
     @Transactional
     fun rememberMembers(members: IncomingChatMembers) {
-        members.members.forEach { rememberMember(chatId = members.chatId, it.userId, it.displayName) }
+        members.members.forEach {
+            rememberMember(chatId = members.chatId, userId = it.userId, displayName = it.displayName, username = it.username)
+        }
     }
 
     @Transactional
@@ -45,19 +48,21 @@ class TelegramChatMemberRegistry(
         }
     }
 
-    private fun rememberMember(chatId: Long, userId: Long, displayName: String) {
+    private fun rememberMember(chatId: Long, userId: Long, displayName: String, username: String?) {
         val id = TelegramKnownChatMemberId(chatId = chatId, userId = userId)
         val existingMember = repository.findById(id)
         val knownMember = existingMember.orElseGet {
-            logger.debug("Adding known chat member chatId={} userId={} displayName={}", chatId, userId, displayName)
+            logger.debug("Adding known chat member chatId={} userId={} displayName={} username={}", chatId, userId, displayName, username)
             TelegramKnownChatMember(
                 id = id,
                 displayName = displayName,
                 lastSeenAt = Instant.now(clock),
+                username = username,
             )
         }
 
         knownMember.displayName = displayName
+        knownMember.username = username
         knownMember.lastSeenAt = Instant.now(clock)
         repository.save(knownMember)
     }
@@ -65,7 +70,7 @@ class TelegramChatMemberRegistry(
     @Transactional(readOnly = true)
     fun getKnownMembers(chatId: Long): List<TelegramChatMember> =
         repository.findKnownMembers(chatId)
-            .map { TelegramChatMember(userId = it.id.userId, displayName = it.displayName) }
+            .map { TelegramChatMember(userId = it.id.userId, displayName = it.displayName, username = it.username) }
 
     private companion object {
         private val logger = LoggerFactory.getLogger(TelegramChatMemberRegistry::class.java)

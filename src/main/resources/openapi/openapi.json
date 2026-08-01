@@ -3,7 +3,7 @@
     "info": {
         "title": "Tiny Cerberus Bot",
         "description": "Discipline Telegram Chat bot",
-        "version": "v1.2.3"
+        "version": "v1.2.4"
     },
     "servers": [
         {
@@ -970,6 +970,9 @@
                     },
                     "displayName": {
                         "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
                     }
                 }
             },
@@ -981,6 +984,9 @@
                         "format": "int64"
                     },
                     "displayName": {
+                        "type": "string"
+                    },
+                    "username": {
                         "type": "string"
                     }
                 }

@@ -13,6 +13,8 @@ class TelegramKnownChatMember(
     var displayName: String,
     @Column(nullable = false)
     var lastSeenAt: Instant,
+    @Column
+    var username: String? = null,
 )
 
 @Embeddable
