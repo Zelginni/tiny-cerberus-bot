@@ -20,6 +20,7 @@ fun Chat.toViewModel(): ChatViewDto
     digestEnabled = digestEnabled,
     rulesEnabled = rulesEnabled,
     statisticsEnabled = statisticsEnabled,
+    pythiaEnabled = pythiaEnabled,
     fullStatisticsLimit = fullStatisticsLimit,
     ignoredStatisticsMessageThreadIds = ignoredStatisticsMessageThreadIds.sorted(),
 )

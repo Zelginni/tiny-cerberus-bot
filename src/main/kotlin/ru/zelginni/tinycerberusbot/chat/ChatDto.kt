@@ -18,6 +18,7 @@ data class ChatViewDto(
     var digestEnabled: Boolean? = null,
     var rulesEnabled: Boolean? = null,
     var statisticsEnabled: Boolean? = null,
+    var pythiaEnabled: Boolean? = null,
     var fullStatisticsLimit: Int? = null,
     var ignoredStatisticsMessageThreadIds: List<Int> = emptyList(),
 )

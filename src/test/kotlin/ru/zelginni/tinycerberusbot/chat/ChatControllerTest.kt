@@ -193,6 +193,22 @@ class ChatControllerTest {
 
     @Test
     @WithMockUser
+    fun enablePythiaFeature() {
+        val chatName = "Web test pythia chat"
+        val telegramId = "-1777777777"
+        val chat = Chat(name = chatName, telegramId = telegramId, pythiaEnabled = false)
+        chatRepository.saveAndFlush(chat)
+
+        mockMvc.put("/admin/chat/enable/PYTHIA?telegramId=$telegramId")
+            .andDo { print() }
+            .andExpect { status().isOk }
+
+        val modifiedChat = chatRepository.findById(chat.id!!).orElse(null)
+        assertEquals(true, modifiedChat.pythiaEnabled)
+    }
+
+    @Test
+    @WithMockUser
     fun getChatWarnStatistics() {
         val telegramId = "-999999999"
         val chat = chatRepository.saveAndFlush(Chat(name = "Warn statistics chat", telegramId = telegramId, warnLimit = 3))

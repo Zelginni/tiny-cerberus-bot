@@ -44,6 +44,17 @@ enum class ChatFeature(val displayName: String) {
         }
 
         override fun isEnabled(chat: Chat): Boolean = chat.statisticsEnabled == true
+    },
+    PYTHIA("Предсказания") {
+        override fun enable(chat: Chat) {
+            chat.pythiaEnabled = true
+        }
+
+        override fun disable(chat: Chat) {
+            chat.pythiaEnabled = false
+        }
+
+        override fun isEnabled(chat: Chat): Boolean = chat.pythiaEnabled == true
     };
 
     abstract fun enable(chat: Chat)

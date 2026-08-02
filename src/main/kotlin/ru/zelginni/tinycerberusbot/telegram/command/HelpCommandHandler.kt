@@ -72,6 +72,15 @@ class HelpCommandHandler(
             )
         }
 
+        if (chat?.pythiaEnabled == true) {
+            sections.add(
+                commandSection(
+                    "Предсказания",
+                    "/pythia — получить случайное предсказание",
+                )
+            )
+        }
+
         sections.add(settingsSection(chat))
         return sections.joinToString(separator = "\n\n")
     }

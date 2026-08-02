@@ -25,6 +25,8 @@ data class Chat(
     var rulesEnabled: Boolean? = false,
     @Column(name = "statistics_enabled")
     var statisticsEnabled: Boolean? = false,
+    @Column(name = "pythia_enabled")
+    var pythiaEnabled: Boolean? = false,
     @Column(nullable = false)
     var fullStatisticsLimit: Int = DEFAULT_FULL_STATISTICS_LIMIT,
     @ElementCollection(fetch = FetchType.EAGER)
